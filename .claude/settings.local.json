@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//d/SOURCE CODE/**)",
+      "Bash(composer create-project laravel/laravel ftth-temp --prefer-dist)",
+      "Bash(npm install:*)",
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)"
+    ]
+  }
+}
