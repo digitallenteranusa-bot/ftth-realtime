@@ -557,4 +557,4 @@ tail -f /var/www/ftth/storage/logs/worker.log
 
 ## Lisensi
 
-Agus Setono - Trenggalek - All rights reserved.
+Agus Setyono - Trenggalek - All rights reserved.
