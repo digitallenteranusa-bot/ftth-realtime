@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\FiberRoute;
 use App\Models\Odc;
 use App\Models\Odp;
 use Illuminate\Http\Request;
@@ -71,7 +72,15 @@ class OdpController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $oldLat = $odp->lat;
+        $oldLng = $odp->lng;
         $odp->update($validated);
+
+        // Update fiber routes jika lokasi berubah
+        if ($odp->lat != $oldLat || $odp->lng != $oldLng) {
+            $this->updateFiberRouteCoordinates('odp', $odp->id, $odp->lat, $odp->lng);
+        }
+
         return redirect()->route('odps.index')->with('success', 'ODP berhasil diupdate.');
     }
 
@@ -79,5 +88,26 @@ class OdpController extends Controller
     {
         $odp->delete();
         return redirect()->route('odps.index')->with('success', 'ODP berhasil dihapus.');
+    }
+
+    private function updateFiberRouteCoordinates(string $type, int $id, float $newLat, float $newLng): void
+    {
+        // Update routes where this device is the source (update first coordinate)
+        FiberRoute::where('source_type', $type)->where('source_id', $id)->each(function ($route) use ($newLat, $newLng) {
+            $coords = $route->coordinates;
+            if (!empty($coords)) {
+                $coords[0] = [$newLat, $newLng];
+                $route->update(['coordinates' => $coords]);
+            }
+        });
+
+        // Update routes where this device is the destination (update last coordinate)
+        FiberRoute::where('destination_type', $type)->where('destination_id', $id)->each(function ($route) use ($newLat, $newLng) {
+            $coords = $route->coordinates;
+            if (!empty($coords)) {
+                $coords[count($coords) - 1] = [$newLat, $newLng];
+                $route->update(['coordinates' => $coords]);
+            }
+        });
     }
 }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\FiberRoute;
 use App\Models\Olt;
 use App\Models\Ont;
 use App\Models\PonPort;
@@ -79,7 +80,21 @@ class OltController extends Controller
         ]);
 
         if (empty($validated['password'])) unset($validated['password']);
+        $oldLat = $olt->lat;
+        $oldLng = $olt->lng;
         $olt->update($validated);
+
+        // Update fiber routes jika lokasi berubah
+        if ($olt->lat != $oldLat || $olt->lng != $oldLng) {
+            FiberRoute::where('source_type', 'olt')->where('source_id', $olt->id)->each(function ($route) use ($olt) {
+                $coords = $route->coordinates;
+                if (!empty($coords)) {
+                    $coords[0] = [$olt->lat, $olt->lng];
+                    $route->update(['coordinates' => $coords]);
+                }
+            });
+        }
+
         return redirect()->route('olts.index')->with('success', 'OLT berhasil diupdate.');
     }
 
