@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const form = useForm({
@@ -57,6 +58,7 @@ function submit() {
                             <label class="block text-sm font-medium text-gray-700">Longitude</label>
                             <input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                         </div>
+                        <LocationPicker :lat="form.lat" :lng="form.lng" @update:lat="v => form.lat = v" @update:lng="v => form.lng = v" label="Pilih Lokasi di Peta" />
                     </div>
                     <div>
                         <label class="flex items-center gap-2">
