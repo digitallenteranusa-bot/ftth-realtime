@@ -17,6 +17,19 @@ class GenerateFiberRoutes extends Command
     {
         $created = 0;
 
+        // Auto-assign olt_id to ODCs that don't have one (if only 1 OLT exists)
+        $olts = \App\Models\Olt::where('is_active', true)->get();
+        $odcsWithoutOlt = Odc::whereNull('olt_id')->get();
+        if ($odcsWithoutOlt->count() > 0 && $olts->count() === 1) {
+            $singleOlt = $olts->first();
+            foreach ($odcsWithoutOlt as $odc) {
+                $odc->update(['olt_id' => $singleOlt->id]);
+                $this->info("Auto-assigned OLT '{$singleOlt->name}' to ODC '{$odc->name}'");
+            }
+        } elseif ($odcsWithoutOlt->count() > 0 && $olts->count() > 1) {
+            $this->warn("{$odcsWithoutOlt->count()} ODC(s) have no olt_id. Assign OLT manually in Edit ODC page.");
+        }
+
         // OLT → ODC
         $odcs = Odc::whereNotNull('olt_id')->with('olt')->get();
         foreach ($odcs as $odc) {
