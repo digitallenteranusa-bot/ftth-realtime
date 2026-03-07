@@ -10,6 +10,8 @@ class InterfaceTraffic extends Model
 {
     use HasFactory;
 
+    protected $table = 'interface_traffics';
+
     protected $fillable = [
         'mikrotik_id',
         'interface_name',
