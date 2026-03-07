@@ -366,7 +366,7 @@ onMounted(() => {
         L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png', { maxZoom: 19, opacity: 0.7 }),
     ]);
 
-    map = L.map(mapContainer.value, { layers: [satellite] }).setView([-8.1092, 111.6193], 16);
+    map = L.map(mapContainer.value, { layers: [satellite] }).setView([-8.1228, 111.5617], 15);
 
     L.control.layers({
         'Satelit': satellite,
