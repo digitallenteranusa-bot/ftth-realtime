@@ -5,6 +5,7 @@ use App\Models\FiberRoute;
 use App\Models\Odc;
 use App\Models\Odp;
 use App\Models\Olt;
+use App\Models\Ont;
 use Illuminate\Database\Seeder;
 
 class FiberRouteSeeder extends Seeder
@@ -46,6 +47,23 @@ class FiberRouteSeeder extends Seeder
                     'color' => '#33cc33',
                     'status' => 'active',
                 ]);
+
+                // ODP to ONTs (last mile to customer)
+                foreach ($odp->onts as $ont) {
+                    FiberRoute::create([
+                        'name' => "Drop {$odp->name} - {$ont->name}",
+                        'source_type' => 'odp',
+                        'source_id' => $odp->id,
+                        'destination_type' => 'ont',
+                        'destination_id' => $ont->id,
+                        'coordinates' => [
+                            [$odp->lat, $odp->lng],
+                            [$ont->lat, $ont->lng],
+                        ],
+                        'color' => '#ff9933',
+                        'status' => 'active',
+                    ]);
+                }
             }
         }
     }
