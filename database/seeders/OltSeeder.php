@@ -18,12 +18,11 @@ class OltSeeder extends Seeder
             'username' => 'admin',
             'password' => 'admin123',
             'is_active' => true,
-            'location' => 'NOC Room - Rack B1',
-            'lat' => -7.2580,
-            'lng' => 112.7525,
+            'location' => 'NOC Trenggalek - Rack B1',
+            'lat' => -8.0505,
+            'lng' => 111.7070,
         ]);
 
-        // 8 PON ports for OLT 1
         for ($i = 1; $i <= 8; $i++) {
             PonPort::create(['olt_id' => $olt1->id, 'slot' => 1, 'port' => $i, 'description' => "PON 1/{$i}", 'is_active' => true]);
         }
@@ -37,9 +36,9 @@ class OltSeeder extends Seeder
             'username' => 'admin',
             'password' => 'admin123',
             'is_active' => true,
-            'location' => 'NOC Room - Rack B2',
-            'lat' => -7.2585,
-            'lng' => 112.7530,
+            'location' => 'NOC Trenggalek - Rack B2',
+            'lat' => -8.0508,
+            'lng' => 111.7073,
         ]);
 
         for ($i = 1; $i <= 8; $i++) {

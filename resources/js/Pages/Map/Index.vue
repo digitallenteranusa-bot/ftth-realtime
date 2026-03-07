@@ -105,7 +105,7 @@ function toggleLayer(key) {
 }
 
 onMounted(() => {
-    map = L.map(mapContainer.value).setView([-7.265, 112.750], 14);
+    map = L.map(mapContainer.value).setView([-8.0503, 111.7068], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,

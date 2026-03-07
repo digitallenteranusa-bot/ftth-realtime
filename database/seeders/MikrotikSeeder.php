@@ -15,9 +15,9 @@ class MikrotikSeeder extends Seeder
             'api_username' => 'admin',
             'api_password' => 'admin123',
             'is_active' => true,
-            'location' => 'NOC Room - Rack A1',
-            'lat' => -7.2575,
-            'lng' => 112.7520,
+            'location' => 'NOC Trenggalek - Rack A1',
+            'lat' => -8.0500,
+            'lng' => 111.7065,
         ]);
         Mikrotik::create([
             'name' => 'MK-Dist-01',
@@ -26,9 +26,9 @@ class MikrotikSeeder extends Seeder
             'api_username' => 'admin',
             'api_password' => 'admin123',
             'is_active' => true,
-            'location' => 'POP Darmo',
-            'lat' => -7.2650,
-            'lng' => 112.7380,
+            'location' => 'POP Kelutan',
+            'lat' => -8.0530,
+            'lng' => 111.7100,
         ]);
         Mikrotik::create([
             'name' => 'MK-Dist-02',
@@ -37,9 +37,9 @@ class MikrotikSeeder extends Seeder
             'api_username' => 'admin',
             'api_password' => 'admin123',
             'is_active' => true,
-            'location' => 'POP Gubeng',
-            'lat' => -7.2700,
-            'lng' => 112.7550,
+            'location' => 'POP Ngantru',
+            'lat' => -8.0470,
+            'lng' => 111.7030,
         ]);
     }
 }
