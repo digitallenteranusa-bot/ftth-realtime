@@ -1,5 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
+import { useDarkMode } from './Composables/useDarkMode';
+useDarkMode().init();
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

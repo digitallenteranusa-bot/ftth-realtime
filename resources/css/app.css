@@ -1,3 +1,103 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* Dark mode global overrides for common elements */
+    .dark body {
+        @apply bg-gray-900 text-gray-200;
+    }
+
+    /* Forms */
+    .dark input[type="text"],
+    .dark input[type="email"],
+    .dark input[type="password"],
+    .dark input[type="number"],
+    .dark input[type="tel"],
+    .dark input[type="url"],
+    .dark input[type="search"],
+    .dark select,
+    .dark textarea {
+        @apply bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400;
+    }
+
+    .dark input[type="text"]:focus,
+    .dark input[type="email"]:focus,
+    .dark input[type="password"]:focus,
+    .dark input[type="number"]:focus,
+    .dark select:focus,
+    .dark textarea:focus {
+        @apply border-indigo-500 ring-indigo-500;
+    }
+
+    .dark input[type="checkbox"] {
+        @apply bg-gray-700 border-gray-600;
+    }
+
+    /* Tables */
+    .dark table {
+        @apply text-gray-200;
+    }
+    .dark thead {
+        @apply bg-gray-800;
+    }
+    .dark th {
+        @apply text-gray-300;
+    }
+    .dark tbody tr {
+        @apply border-gray-700;
+    }
+    .dark tbody tr:hover {
+        @apply bg-gray-700/50;
+    }
+
+    /* Cards & panels */
+    .dark .bg-white {
+        @apply !bg-gray-800;
+    }
+    .dark .shadow {
+        @apply shadow-gray-900/50;
+    }
+
+    /* Text overrides */
+    .dark .text-gray-900 {
+        @apply !text-gray-100;
+    }
+    .dark .text-gray-800 {
+        @apply !text-gray-200;
+    }
+    .dark .text-gray-700 {
+        @apply !text-gray-300;
+    }
+    .dark .text-gray-600 {
+        @apply !text-gray-400;
+    }
+
+    /* Borders */
+    .dark .border-gray-200 {
+        @apply !border-gray-700;
+    }
+    .dark .border-gray-300 {
+        @apply !border-gray-600;
+    }
+
+    /* Backgrounds */
+    .dark .bg-gray-50 {
+        @apply !bg-gray-800;
+    }
+    .dark .bg-gray-100 {
+        @apply !bg-gray-900;
+    }
+    .dark .bg-gray-200 {
+        @apply !bg-gray-700;
+    }
+
+    /* Pagination */
+    .dark nav[aria-label="Pagination"] span,
+    .dark nav[aria-label="Pagination"] a {
+        @apply bg-gray-800 border-gray-600 text-gray-300;
+    }
+    .dark nav[aria-label="Pagination"] span[aria-current="page"] span {
+        @apply bg-indigo-600 border-indigo-600 text-white;
+    }
+}
