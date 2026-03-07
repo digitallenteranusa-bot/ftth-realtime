@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 const props = defineProps({ odc: Object });
 const form = useForm({ name: props.odc.name, lat: props.odc.lat, lng: props.odc.lng, address: props.odc.address || '', capacity: props.odc.capacity, used_ports: props.odc.used_ports, splitter_ratio: props.odc.splitter_ratio, is_active: props.odc.is_active, notes: props.odc.notes || '' });
@@ -17,6 +18,7 @@ function submit() { form.put(route('odcs.update', props.odc.id)); }
                     <div><label class="block text-sm font-medium text-gray-700">Address</label><input v-model="form.address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Latitude *</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Longitude *</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                    <LocationPicker :lat="form.lat" :lng="form.lng" @update:lat="v => form.lat = v" @update:lng="v => form.lng = v" label="Pilih Lokasi di Peta" />
                     <div><label class="block text-sm font-medium text-gray-700">Capacity</label><input v-model="form.capacity" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Splitter Ratio</label><input v-model="form.splitter_ratio" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                 </div>
