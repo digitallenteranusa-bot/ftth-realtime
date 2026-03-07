@@ -2,8 +2,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-const props = defineProps({ odc: Object });
-const form = useForm({ name: props.odc.name, lat: props.odc.lat, lng: props.odc.lng, address: props.odc.address || '', capacity: props.odc.capacity, used_ports: props.odc.used_ports, splitter_ratio: props.odc.splitter_ratio, is_active: props.odc.is_active, notes: props.odc.notes || '' });
+const props = defineProps({ odc: Object, olts: Array });
+const form = useForm({ name: props.odc.name, olt_id: props.odc.olt_id || '', lat: props.odc.lat, lng: props.odc.lng, address: props.odc.address || '', capacity: props.odc.capacity, used_ports: props.odc.used_ports, splitter_ratio: props.odc.splitter_ratio, is_active: props.odc.is_active, notes: props.odc.notes || '' });
 function submit() { form.put(route('odcs.update', props.odc.id)); }
 </script>
 
@@ -15,6 +15,7 @@ function submit() { form.put(route('odcs.update', props.odc.id)); }
             <form @submit.prevent="submit" class="space-y-4 rounded-lg bg-white p-6 shadow">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div><label class="block text-sm font-medium text-gray-700">Name *</label><input v-model="form.name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                    <div><label class="block text-sm font-medium text-gray-700">OLT (sumber feeder)</label><select v-model="form.olt_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- Pilih OLT --</option><option v-for="olt in olts" :key="olt.id" :value="olt.id">{{ olt.name }}</option></select></div>
                     <div><label class="block text-sm font-medium text-gray-700">Address</label><input v-model="form.address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Latitude *</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Longitude *</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>

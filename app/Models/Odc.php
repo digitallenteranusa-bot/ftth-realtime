@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Odc extends Model
@@ -12,6 +13,7 @@ class Odc extends Model
     use HasFactory, Auditable;
 
     protected $fillable = [
+        'olt_id',
         'name',
         'lat',
         'lng',
@@ -30,6 +32,11 @@ class Odc extends Model
             'is_active' => 'boolean',
             'geojson_area' => 'array',
         ];
+    }
+
+    public function olt(): BelongsTo
+    {
+        return $this->belongsTo(Olt::class);
     }
 
     public function odps(): HasMany

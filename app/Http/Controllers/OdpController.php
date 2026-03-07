@@ -38,7 +38,26 @@ class OdpController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Odp::create($validated);
+        $odp = Odp::create($validated);
+
+        // Auto-create fiber route ODC → ODP
+        $odc = Odc::find($odp->odc_id);
+        if ($odc) {
+            FiberRoute::create([
+                'name' => "Distribusi {$odc->name} - {$odp->name}",
+                'source_type' => 'odc',
+                'source_id' => $odc->id,
+                'destination_type' => 'odp',
+                'destination_id' => $odp->id,
+                'coordinates' => [
+                    [$odc->lat, $odc->lng],
+                    [$odp->lat, $odp->lng],
+                ],
+                'color' => '#33cc33',
+                'status' => 'active',
+            ]);
+        }
+
         return redirect()->route('odps.index')->with('success', 'ODP berhasil ditambahkan.');
     }
 
@@ -76,7 +95,6 @@ class OdpController extends Controller
         $oldLng = $odp->lng;
         $odp->update($validated);
 
-        // Update fiber routes jika lokasi berubah
         if ($odp->lat != $oldLat || $odp->lng != $oldLng) {
             $this->updateFiberRouteCoordinates('odp', $odp->id, $odp->lat, $odp->lng);
         }
@@ -86,13 +104,17 @@ class OdpController extends Controller
 
     public function destroy(Odp $odp)
     {
+        FiberRoute::where(function ($q) use ($odp) {
+            $q->where(['source_type' => 'odp', 'source_id' => $odp->id])
+              ->orWhere(['destination_type' => 'odp', 'destination_id' => $odp->id]);
+        })->delete();
+
         $odp->delete();
         return redirect()->route('odps.index')->with('success', 'ODP berhasil dihapus.');
     }
 
     private function updateFiberRouteCoordinates(string $type, int $id, float $newLat, float $newLng): void
     {
-        // Update routes where this device is the source (update first coordinate)
         FiberRoute::where('source_type', $type)->where('source_id', $id)->each(function ($route) use ($newLat, $newLng) {
             $coords = $route->coordinates;
             if (!empty($coords)) {
@@ -101,7 +123,6 @@ class OdpController extends Controller
             }
         });
 
-        // Update routes where this device is the destination (update last coordinate)
         FiberRoute::where('destination_type', $type)->where('destination_id', $id)->each(function ($route) use ($newLat, $newLng) {
             $coords = $route->coordinates;
             if (!empty($coords)) {

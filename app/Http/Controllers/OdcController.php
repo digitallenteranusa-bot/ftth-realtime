@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FiberRoute;
 use App\Models\Odc;
+use App\Models\Olt;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,19 +12,22 @@ class OdcController extends Controller
     public function index()
     {
         return Inertia::render('Odc/Index', [
-            'odcs' => Odc::withCount('odps')->latest()->paginate(15),
+            'odcs' => Odc::with('olt:id,name')->withCount('odps')->latest()->paginate(15),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Odc/Create');
+        return Inertia::render('Odc/Create', [
+            'olts' => Olt::where('is_active', true)->get(['id', 'name']),
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'olt_id' => 'nullable|exists:olts,id',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'address' => 'nullable|string|max:255',
@@ -35,7 +39,28 @@ class OdcController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Odc::create($validated);
+        $odc = Odc::create($validated);
+
+        // Auto-create fiber route OLT → ODC
+        if ($odc->olt_id) {
+            $olt = Olt::find($odc->olt_id);
+            if ($olt && $olt->lat && $olt->lng) {
+                FiberRoute::create([
+                    'name' => "Feeder {$olt->name} - {$odc->name}",
+                    'source_type' => 'olt',
+                    'source_id' => $olt->id,
+                    'destination_type' => 'odc',
+                    'destination_id' => $odc->id,
+                    'coordinates' => [
+                        [$olt->lat, $olt->lng],
+                        [$odc->lat, $odc->lng],
+                    ],
+                    'color' => '#3388ff',
+                    'status' => 'active',
+                ]);
+            }
+        }
+
         return redirect()->route('odcs.index')->with('success', 'ODC berhasil ditambahkan.');
     }
 
@@ -48,13 +73,17 @@ class OdcController extends Controller
 
     public function edit(Odc $odc)
     {
-        return Inertia::render('Odc/Edit', ['odc' => $odc]);
+        return Inertia::render('Odc/Edit', [
+            'odc' => $odc,
+            'olts' => Olt::where('is_active', true)->get(['id', 'name']),
+        ]);
     }
 
     public function update(Request $request, Odc $odc)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'olt_id' => 'nullable|exists:olts,id',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'address' => 'nullable|string|max:255',
@@ -70,7 +99,6 @@ class OdcController extends Controller
         $oldLng = $odc->lng;
         $odc->update($validated);
 
-        // Update fiber routes jika lokasi berubah
         if ($odc->lat != $oldLat || $odc->lng != $oldLng) {
             $this->updateFiberRouteCoordinates('odc', $odc->id, $odc->lat, $odc->lng);
         }
@@ -80,13 +108,18 @@ class OdcController extends Controller
 
     public function destroy(Odc $odc)
     {
+        // Hapus fiber routes terkait
+        FiberRoute::where(function ($q) use ($odc) {
+            $q->where(['source_type' => 'odc', 'source_id' => $odc->id])
+              ->orWhere(['destination_type' => 'odc', 'destination_id' => $odc->id]);
+        })->delete();
+
         $odc->delete();
         return redirect()->route('odcs.index')->with('success', 'ODC berhasil dihapus.');
     }
 
     private function updateFiberRouteCoordinates(string $type, int $id, float $newLat, float $newLng): void
     {
-        // Update routes where this device is the source (update first coordinate)
         FiberRoute::where('source_type', $type)->where('source_id', $id)->each(function ($route) use ($newLat, $newLng) {
             $coords = $route->coordinates;
             if (!empty($coords)) {
@@ -95,7 +128,6 @@ class OdcController extends Controller
             }
         });
 
-        // Update routes where this device is the destination (update last coordinate)
         FiberRoute::where('destination_type', $type)->where('destination_id', $id)->each(function ($route) use ($newLat, $newLng) {
             $coords = $route->coordinates;
             if (!empty($coords)) {
