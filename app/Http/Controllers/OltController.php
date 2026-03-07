@@ -27,7 +27,7 @@ class OltController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'vendor' => 'required|in:zte,huawei,fiberhome',
+            'vendor' => 'required|string|max:50',
             'host' => 'required|string|max:255',
             'telnet_port' => 'nullable|integer',
             'ssh_port' => 'nullable|integer',
@@ -64,7 +64,7 @@ class OltController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'vendor' => 'required|in:zte,huawei,fiberhome',
+            'vendor' => 'required|string|max:50',
             'host' => 'required|string|max:255',
             'telnet_port' => 'nullable|integer',
             'ssh_port' => 'nullable|integer',

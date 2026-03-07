@@ -11,7 +11,7 @@ class OltServiceFactory
             'zte' => new ZteOltDriver($olt),
             'huawei' => new HuaweiOltDriver($olt),
             'fiberhome' => new FiberHomeOltDriver($olt),
-            default => throw new \InvalidArgumentException("Unsupported OLT vendor: {$olt->vendor}"),
+            default => new GenericOltDriver($olt),
         };
     }
 }

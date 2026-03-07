@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 
 const form = useForm({
-    name: '', vendor: 'zte', host: '', telnet_port: 23, ssh_port: 22,
+    name: '', vendor: '', host: '', telnet_port: 23, ssh_port: 22,
     username: '', password: '', snmp_community: 'public', snmp_port: 161,
     is_active: true, location: '', lat: '', lng: '', notes: '',
 });
@@ -27,9 +27,33 @@ function submit() { form.post(route('olts.store')); }
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vendor *</label>
                             <select v-model="form.vendor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                                <option value="zte">ZTE</option>
-                                <option value="huawei">Huawei</option>
-                                <option value="fiberhome">FiberHome</option>
+                                <option value="">-- Pilih Vendor --</option>
+                                <optgroup label="GPON">
+                                    <option value="zte">ZTE</option>
+                                    <option value="huawei">Huawei</option>
+                                    <option value="fiberhome">FiberHome</option>
+                                    <option value="nokia">Nokia (Alcatel-Lucent)</option>
+                                    <option value="bdcom">BDCOM</option>
+                                    <option value="raisecom">Raisecom</option>
+                                    <option value="vsol">VSOL</option>
+                                    <option value="tp-link">TP-Link</option>
+                                    <option value="dasan">Dasan Zhone (DZS)</option>
+                                    <option value="calix">Calix</option>
+                                    <option value="ubiquiti">Ubiquiti (UFiber)</option>
+                                    <option value="mikrotik">MikroTik</option>
+                                </optgroup>
+                                <optgroup label="EPON">
+                                    <option value="bdcom-epon">BDCOM (EPON)</option>
+                                    <option value="vsol-epon">VSOL (EPON)</option>
+                                    <option value="cdata">C-Data (EPON)</option>
+                                    <option value="syrotech">Syrotech (EPON)</option>
+                                    <option value="netlink">Netlink (EPON)</option>
+                                    <option value="hioso">HiOSO (EPON)</option>
+                                    <option value="raisecom-epon">Raisecom (EPON)</option>
+                                </optgroup>
+                                <optgroup label="Lainnya">
+                                    <option value="other">Lainnya</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div>

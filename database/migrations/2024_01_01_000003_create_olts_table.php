@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('olts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('vendor', ['zte', 'huawei', 'fiberhome']);
+            $table->string('vendor', 50);
             $table->string('host');
             $table->integer('telnet_port')->default(23);
             $table->integer('ssh_port')->default(22);
