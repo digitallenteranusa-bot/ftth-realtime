@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 const props = defineProps({ ont: Object, odps: Array, customers: Array, olts: Array, ponPorts: Array });
 const form = useForm({ odp_id: props.ont.odp_id || '', customer_id: props.ont.customer_id || '', olt_id: props.ont.olt_id || '', pon_port_id: props.ont.pon_port_id || '', name: props.ont.name || '', serial_number: props.ont.serial_number || '', ont_id_number: props.ont.ont_id_number || '', status: props.ont.status, lat: props.ont.lat || '', lng: props.ont.lng || '', notes: props.ont.notes || '' });
@@ -23,6 +24,7 @@ function submit() { form.put(route('onts.update', props.ont.id)); }
                     <div><label class="block text-sm font-medium text-gray-700">Status</label><select v-model="form.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="online">Online</option><option value="offline">Offline</option><option value="los">LOS</option><option value="dyinggasp">Dying Gasp</option><option value="unknown">Unknown</option></select></div>
                     <div><label class="block text-sm font-medium text-gray-700">Latitude</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Longitude</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                    <LocationPicker :lat="form.lat" :lng="form.lng" @update:lat="v => form.lat = v" @update:lng="v => form.lng = v" label="Pilih Lokasi di Peta" />
                 </div>
                 <div><label class="block text-sm font-medium text-gray-700">Notes</label><textarea v-model="form.notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea></div>
                 <div class="flex justify-end gap-3">
