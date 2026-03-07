@@ -262,6 +262,7 @@ Masukkan password yang tadi dibuat. Output yang diharapkan:
 ### Step 6 - Clone Repository
 
 ```bash
+mkdir -p /var/www
 cd /var/www
 git clone https://github.com/digitallenteranusa-bot/ftth-realtime.git ftth
 cd /var/www/ftth
