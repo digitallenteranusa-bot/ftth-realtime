@@ -68,9 +68,18 @@ monitoring_logs, pppoe_sessions, interface_traffics
 
 ```bash
 sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl git unzip software-properties-common
 ```
 
-### 2. Install PHP 8.2 dan Ekstensi
+### 2. Install Prerequisite dan PHP 8.2
+
+Install `software-properties-common` terlebih dahulu (diperlukan untuk `add-apt-repository`):
+
+```bash
+sudo apt install -y software-properties-common
+```
+
+Tambahkan PPA Ondrej PHP dan install PHP 8.2:
 
 ```bash
 sudo add-apt-repository ppa:ondrej/php -y
@@ -86,6 +95,8 @@ Verifikasi:
 ```bash
 php -v
 # PHP 8.2.x
+php -m | grep sockets
+# sockets
 ```
 
 ### 3. Install Composer
@@ -145,19 +156,13 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
-### 6. Install Git
-
-```bash
-sudo apt install -y git
-```
-
-### 7. Clone / Upload Project
+### 6. Clone / Upload Project
 
 **Opsi A - Clone dari Git:**
 
 ```bash
 cd /var/www
-sudo git clone <URL_REPOSITORY_ANDA> ftth
+sudo git clone https://github.com/digitallenteranusa-bot/ftth-realtime.git ftth
 sudo chown -R $USER:www-data /var/www/ftth
 cd /var/www/ftth
 ```
@@ -171,21 +176,21 @@ sudo chown -R $USER:www-data /var/www/ftth
 cd /var/www/ftth
 ```
 
-### 8. Install Dependencies PHP
+### 7. Install Dependencies PHP
 
 ```bash
 cd /var/www/ftth
 composer install --optimize-autoloader --no-dev
 ```
 
-### 9. Install Dependencies Node.js
+### 8. Install Dependencies Node.js
 
 ```bash
 cd /var/www/ftth
 npm install
 ```
 
-### 10. Konfigurasi Environment
+### 9. Konfigurasi Environment
 
 ```bash
 cd /var/www/ftth
@@ -226,7 +231,7 @@ REVERB_SCHEME=http
 
 Simpan file (`Ctrl+X`, `Y`, `Enter`).
 
-### 11. Jalankan Migration dan Seeder
+### 10. Jalankan Migration dan Seeder
 
 ```bash
 cd /var/www/ftth
@@ -234,14 +239,14 @@ php artisan migrate --force
 php artisan db:seed --force
 ```
 
-### 12. Build Frontend untuk Production
+### 11. Build Frontend untuk Production
 
 ```bash
 cd /var/www/ftth
 npm run build
 ```
 
-### 13. Optimasi Laravel untuk Production
+### 12. Optimasi Laravel untuk Production
 
 ```bash
 cd /var/www/ftth
@@ -252,7 +257,7 @@ php artisan event:cache
 php artisan storage:link
 ```
 
-### 14. Set Permission
+### 13. Set Permission
 
 ```bash
 cd /var/www/ftth
@@ -260,7 +265,7 @@ sudo chown -R $USER:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 ```
 
-### 15. Install dan Konfigurasi Nginx
+### 14. Install dan Konfigurasi Nginx
 
 ```bash
 sudo apt install -y nginx
@@ -318,7 +323,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 16. Setup Supervisor untuk Queue Worker dan Reverb
+### 15. Setup Supervisor untuk Queue Worker dan Reverb
 
 Install Supervisor:
 
@@ -400,7 +405,7 @@ ftth-worker:ftth-worker_00       RUNNING   pid 12346, uptime 0:00:05
 ftth-worker:ftth-worker_01       RUNNING   pid 12347, uptime 0:00:05
 ```
 
-### 17. Setup Firewall (Opsional)
+### 16. Setup Firewall (Opsional)
 
 ```bash
 sudo ufw allow 22/tcp
