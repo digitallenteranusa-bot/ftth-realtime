@@ -1,11 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import TrafficChart from '@/Components/TrafficChart.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     stats: Object,
     recentAlarms: Array,
     recentTickets: Array,
+    mikrotiks: Array,
 });
 </script>
 
@@ -54,6 +56,13 @@ const props = defineProps({
                     <div class="rounded-lg bg-white p-4 shadow">
                         <div class="text-sm font-medium text-gray-500">Unresolved Alarms</div>
                         <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.unresolved_alarms }}</div>
+                    </div>
+                </div>
+
+                <!-- Traffic Charts -->
+                <div v-if="mikrotiks && mikrotiks.length" class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div v-for="mk in mikrotiks" :key="mk.id" class="rounded-lg bg-white p-4 shadow">
+                        <TrafficChart :mikrotik-id="mk.id" :mikrotik-name="mk.name" />
                     </div>
                 </div>
 

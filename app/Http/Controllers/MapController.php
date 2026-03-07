@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\FiberRoute;
@@ -13,7 +14,16 @@ class MapController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Map/Index');
+        return Inertia::render('Map/Index', [
+            'mapElements' => [
+                'mikrotiks' => Mikrotik::where('is_active', true)->whereNotNull('lat')->get(['id', 'name', 'host', 'lat', 'lng', 'location']),
+                'olts' => Olt::where('is_active', true)->whereNotNull('lat')->get(['id', 'name', 'vendor', 'host', 'lat', 'lng', 'location']),
+                'odcs' => Odc::where('is_active', true)->get(['id', 'name', 'lat', 'lng', 'capacity', 'used_ports', 'geojson_area']),
+                'odps' => Odp::where('is_active', true)->get(['id', 'name', 'odc_id', 'lat', 'lng', 'capacity', 'used_ports']),
+                'onts' => Ont::whereNotNull('lat')->get(['id', 'name', 'serial_number', 'status', 'lat', 'lng', 'odp_id', 'customer_id', 'rx_power']),
+            ],
+            'fiberRoutes' => FiberRoute::where('status', 'active')->get(['id', 'name', 'source_type', 'source_id', 'destination_type', 'destination_id', 'coordinates', 'color', 'status']),
+        ]);
     }
 
     public function elements()

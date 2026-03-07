@@ -85,6 +85,42 @@ class FiberHomeOltDriver implements OltDriverInterface
         return $data;
     }
 
+    public function registerOnt(int $slot, int $port, int $ontId, string $serialNumber, string $lineProfile, string $serviceProfile): bool
+    {
+        $commands = [
+            "cd gpon",
+            "set whitelist phy_addr address {$serialNumber} password null action add slot {$slot} link {$port} onu {$ontId}",
+            "set onu_profile name {$serviceProfile} slot {$slot} link {$port} onu {$ontId}",
+            "set line_profile name {$lineProfile} slot {$slot} link {$port} onu {$ontId}",
+            "cd ..",
+            "save",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Error') && !str_contains($output, 'FAIL');
+    }
+
+    public function deregisterOnt(int $slot, int $port, int $ontId): bool
+    {
+        $commands = [
+            "cd gpon",
+            "set whitelist phy_addr action delete slot {$slot} link {$port} onu {$ontId}",
+            "cd ..",
+            "save",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Error') && !str_contains($output, 'FAIL');
+    }
+
     protected function parseUnregistered(string $output): array
     {
         $onts = [];

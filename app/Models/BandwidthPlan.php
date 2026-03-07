@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BandwidthPlan extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     protected $fillable = [
         'name',

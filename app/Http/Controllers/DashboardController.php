@@ -33,6 +33,7 @@ class DashboardController extends Controller
             ],
             'recentAlarms' => Alarm::with([])->where('is_resolved', false)->latest()->take(10)->get(),
             'recentTickets' => TroubleTicket::with('customer')->latest()->take(5)->get(),
+            'mikrotiks' => Mikrotik::where('is_active', true)->get(['id', 'name']),
         ]);
     }
 }

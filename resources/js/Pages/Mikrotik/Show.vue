@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import TrafficChart from '@/Components/TrafficChart.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({ mikrotik: Object, pppoeSessions: Object, interfaces: Array });
@@ -21,6 +22,10 @@ defineProps({ mikrotik: Object, pppoeSessions: Object, interfaces: Array });
                     <div><span class="text-xs text-gray-500">Location</span><p class="font-semibold">{{ mikrotik.location || '-' }}</p></div>
                     <div><span class="text-xs text-gray-500">Status</span><p><span :class="mikrotik.is_active ? 'text-green-600' : 'text-red-600'" class="font-semibold">{{ mikrotik.is_active ? 'Active' : 'Inactive' }}</span></p></div>
                     <div><span class="text-xs text-gray-500">Coordinates</span><p class="font-semibold">{{ mikrotik.lat }}, {{ mikrotik.lng }}</p></div>
+                </div>
+
+                <div class="rounded-lg bg-white p-6 shadow">
+                    <TrafficChart :mikrotik-id="mikrotik.id" :mikrotik-name="mikrotik.name" />
                 </div>
 
                 <div class="rounded-lg bg-white p-6 shadow">

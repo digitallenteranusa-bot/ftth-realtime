@@ -14,7 +14,12 @@ watch([severity, unresolved], () => applyFilters());
 <template>
     <Head title="Alarms" />
     <AuthenticatedLayout>
-        <template #header><h2 class="text-xl font-semibold leading-tight text-gray-800">Alarms</h2></template>
+        <template #header>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">Alarms</h2>
+                <a :href="route('export.alarms.csv')" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Export CSV</a>
+            </div>
+        </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-4 flex gap-4">
                 <select v-model="severity" class="rounded-md border-gray-300 shadow-sm sm:text-sm">

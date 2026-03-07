@@ -6,6 +6,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
+import Toast from '@/Components/Toast.vue';
 
 const showingNavigationDropdown = ref(false);
 </script>
@@ -43,6 +44,7 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</NavLink>
                                 <NavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</NavLink>
                                 <NavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</NavLink>
+                                <NavLink :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</NavLink>
                             </div>
                         </div>
 
@@ -154,6 +156,7 @@ const showingNavigationDropdown = ref(false);
                         <ResponsiveNavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -196,6 +199,9 @@ const showingNavigationDropdown = ref(false);
                     <slot name="header" />
                 </div>
             </header>
+
+            <!-- Toast Notifications -->
+            <Toast />
 
             <!-- Page Content -->
             <main>

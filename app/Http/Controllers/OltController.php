@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Olt;
+use App\Models\Ont;
+use App\Models\PonPort;
 use App\Services\Olt\OltServiceFactory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -96,5 +98,88 @@ class OltController extends Controller
         $onts = $driver->getUnregisteredOnts();
         $driver->disconnect();
         return response()->json($onts);
+    }
+
+    public function registerOnt(Request $request, Olt $olt)
+    {
+        $validated = $request->validate([
+            'slot' => 'required|integer',
+            'port' => 'required|integer',
+            'ont_id' => 'required|integer',
+            'serial_number' => 'required|string|max:255',
+            'line_profile' => 'required|string|max:255',
+            'service_profile' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
+            'customer_id' => 'nullable|exists:customers,id',
+            'odp_id' => 'nullable|exists:odps,id',
+        ]);
+
+        $driver = OltServiceFactory::make($olt);
+        if (!$driver->connect()) {
+            return back()->with('error', 'Tidak dapat terhubung ke OLT.');
+        }
+
+        $success = $driver->registerOnt(
+            $validated['slot'],
+            $validated['port'],
+            $validated['ont_id'],
+            $validated['serial_number'],
+            $validated['line_profile'],
+            $validated['service_profile']
+        );
+        $driver->disconnect();
+
+        if (!$success) {
+            return back()->with('error', 'Gagal mendaftarkan ONT di OLT.');
+        }
+
+        $ponPort = PonPort::firstOrCreate(
+            ['olt_id' => $olt->id, 'slot' => $validated['slot'], 'port' => $validated['port']],
+            ['name' => "gpon_{$validated['slot']}/{$validated['port']}"]
+        );
+
+        Ont::create([
+            'olt_id' => $olt->id,
+            'pon_port_id' => $ponPort->id,
+            'odp_id' => $validated['odp_id'] ?? null,
+            'customer_id' => $validated['customer_id'] ?? null,
+            'name' => $validated['name'] ?? $validated['serial_number'],
+            'serial_number' => $validated['serial_number'],
+            'ont_id_number' => $validated['ont_id'],
+            'status' => 'online',
+        ]);
+
+        return back()->with('success', 'ONT berhasil didaftarkan.');
+    }
+
+    public function deregisterOnt(Request $request, Olt $olt)
+    {
+        $validated = $request->validate([
+            'slot' => 'required|integer',
+            'port' => 'required|integer',
+            'ont_id' => 'required|integer',
+        ]);
+
+        $driver = OltServiceFactory::make($olt);
+        if (!$driver->connect()) {
+            return back()->with('error', 'Tidak dapat terhubung ke OLT.');
+        }
+
+        $success = $driver->deregisterOnt(
+            $validated['slot'],
+            $validated['port'],
+            $validated['ont_id']
+        );
+        $driver->disconnect();
+
+        if (!$success) {
+            return back()->with('error', 'Gagal menghapus ONT dari OLT.');
+        }
+
+        Ont::where('olt_id', $olt->id)
+            ->where('ont_id_number', $validated['ont_id'])
+            ->delete();
+
+        return back()->with('success', 'ONT berhasil dihapus dari OLT.');
     }
 }

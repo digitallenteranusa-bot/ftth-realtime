@@ -5,10 +5,14 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+const props = defineProps({
+    mapElements: Object,
+    fiberRoutes: Array,
+});
+
 const mapContainer = ref(null);
 let map = null;
 let layers = {};
-const loading = ref(true);
 const filters = ref({ mikrotik: true, olt: true, odc: true, odp: true, ont: true, fiber: true });
 
 const statusColors = { online: '#22c55e', offline: '#ef4444', los: '#dc2626', dyinggasp: '#f59e0b', unknown: '#6b7280' };
@@ -36,80 +40,59 @@ function createIcon(type, status) {
     });
 }
 
-async function loadMapData() {
-    loading.value = true;
-    try {
-        const [elemRes, routeRes] = await Promise.all([
-            fetch(route('map.elements')),
-            fetch(route('map.fiber-routes')),
-        ]);
-        const elements = await elemRes.json();
-        const fiberRoutes = await routeRes.json();
+function buildLayers() {
+    const elements = props.mapElements;
 
-        // Clear old layers
-        Object.values(layers).forEach(lg => lg.clearLayers());
+    layers.mikrotik = L.layerGroup();
+    elements.mikrotiks.forEach(d => {
+        L.marker([d.lat, d.lng], { icon: createIcon('mikrotik') })
+            .bindPopup(`<b>Mikrotik: ${d.name}</b><br>Host: ${d.host}<br>Location: ${d.location || '-'}`)
+            .addTo(layers.mikrotik);
+    });
 
-        // Mikrotiks
-        layers.mikrotik = L.layerGroup();
-        elements.mikrotiks.forEach(d => {
-            L.marker([d.lat, d.lng], { icon: createIcon('mikrotik') })
-                .bindPopup(`<b>Mikrotik: ${d.name}</b><br>Host: ${d.host}<br>Location: ${d.location || '-'}`)
-                .addTo(layers.mikrotik);
-        });
+    layers.olt = L.layerGroup();
+    elements.olts.forEach(d => {
+        L.marker([d.lat, d.lng], { icon: createIcon('olt') })
+            .bindPopup(`<b>OLT: ${d.name}</b><br>Vendor: ${d.vendor}<br>Host: ${d.host}`)
+            .addTo(layers.olt);
+    });
 
-        // OLTs
-        layers.olt = L.layerGroup();
-        elements.olts.forEach(d => {
-            L.marker([d.lat, d.lng], { icon: createIcon('olt') })
-                .bindPopup(`<b>OLT: ${d.name}</b><br>Vendor: ${d.vendor}<br>Host: ${d.host}`)
-                .addTo(layers.olt);
-        });
+    layers.odc = L.layerGroup();
+    elements.odcs.forEach(d => {
+        L.marker([d.lat, d.lng], { icon: createIcon('odc') })
+            .bindPopup(`<b>ODC: ${d.name}</b><br>Capacity: ${d.used_ports}/${d.capacity}`)
+            .addTo(layers.odc);
+    });
 
-        // ODCs
-        layers.odc = L.layerGroup();
-        elements.odcs.forEach(d => {
-            L.marker([d.lat, d.lng], { icon: createIcon('odc') })
-                .bindPopup(`<b>ODC: ${d.name}</b><br>Capacity: ${d.used_ports}/${d.capacity}`)
-                .addTo(layers.odc);
-        });
+    layers.odp = L.layerGroup();
+    elements.odps.forEach(d => {
+        L.marker([d.lat, d.lng], { icon: createIcon('odp') })
+            .bindPopup(`<b>ODP: ${d.name}</b><br>Capacity: ${d.used_ports}/${d.capacity}`)
+            .addTo(layers.odp);
+    });
 
-        // ODPs
-        layers.odp = L.layerGroup();
-        elements.odps.forEach(d => {
-            L.marker([d.lat, d.lng], { icon: createIcon('odp') })
-                .bindPopup(`<b>ODP: ${d.name}</b><br>Capacity: ${d.used_ports}/${d.capacity}`)
-                .addTo(layers.odp);
-        });
+    layers.ont = L.layerGroup();
+    elements.onts.forEach(d => {
+        L.marker([d.lat, d.lng], { icon: createIcon(null, d.status) })
+            .bindPopup(`<b>ONT: ${d.name || d.serial_number}</b><br>Status: <span style="color:${statusColors[d.status]}">${d.status}</span><br>Rx Power: ${d.rx_power ?? '-'} dBm`)
+            .addTo(layers.ont);
+    });
 
-        // ONTs
-        layers.ont = L.layerGroup();
-        elements.onts.forEach(d => {
-            L.marker([d.lat, d.lng], { icon: createIcon(null, d.status) })
-                .bindPopup(`<b>ONT: ${d.name || d.serial_number}</b><br>Status: <span style="color:${statusColors[d.status]}">${d.status}</span><br>Rx Power: ${d.rx_power ?? '-'} dBm`)
-                .addTo(layers.ont);
-        });
+    layers.fiber = L.layerGroup();
+    props.fiberRoutes.forEach(r => {
+        if (!r.coordinates || r.coordinates.length < 2) return;
+        const latlngs = r.coordinates.map(c => [c[0], c[1]]);
+        const weight = r.source_type === 'olt' ? 4 : r.source_type === 'odc' ? 3 : 2;
+        L.polyline(latlngs, {
+            color: r.color || '#3388ff', weight, opacity: 0.8,
+            dashArray: '10 6', className: 'animated-dash',
+        }).bindPopup(`<b>${r.name || 'Fiber Route'}</b><br>${r.source_type} -> ${r.destination_type}`)
+          .addTo(layers.fiber);
+    });
 
-        // Fiber routes with animated dashes
-        layers.fiber = L.layerGroup();
-        fiberRoutes.forEach(r => {
-            if (!r.coordinates || r.coordinates.length < 2) return;
-            const latlngs = r.coordinates.map(c => [c[0], c[1]]);
-            const weight = r.source_type === 'olt' ? 4 : r.source_type === 'odc' ? 3 : 2;
-            const polyline = L.polyline(latlngs, {
-                color: r.color || '#3388ff', weight, opacity: 0.8,
-                dashArray: '10 6', className: 'animated-dash',
-            }).bindPopup(`<b>${r.name || 'Fiber Route'}</b><br>${r.source_type} -> ${r.destination_type}`)
-              .addTo(layers.fiber);
-        });
-
-        // Add all visible layers to map
-        Object.entries(filters.value).forEach(([key, visible]) => {
-            if (visible && layers[key]) layers[key].addTo(map);
-        });
-    } catch (e) {
-        console.error('Failed to load map data:', e);
-    }
-    loading.value = false;
+    Object.entries(filters.value).forEach(([key, visible]) => {
+        if (visible && layers[key]) layers[key].addTo(map);
+    });
 }
 
 function toggleLayer(key) {
@@ -127,7 +110,7 @@ onMounted(() => {
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(map);
-    loadMapData();
+    buildLayers();
 });
 
 onUnmounted(() => {
@@ -139,7 +122,6 @@ onUnmounted(() => {
     <Head title="Network Map" />
     <AuthenticatedLayout>
         <div class="relative" style="height: calc(100vh - 65px)">
-            <!-- Filter Panel -->
             <div class="absolute top-3 right-3 z-[1000] rounded-lg bg-white p-3 shadow-lg">
                 <h4 class="mb-2 text-sm font-bold text-gray-700">Layers</h4>
                 <label v-for="(label, key) in { mikrotik: 'Mikrotik', olt: 'OLT', odc: 'ODC', odp: 'ODP', ont: 'ONT', fiber: 'Fiber Routes' }"
@@ -149,7 +131,6 @@ onUnmounted(() => {
                 </label>
             </div>
 
-            <!-- Legend -->
             <div class="absolute bottom-3 left-3 z-[1000] rounded-lg bg-white p-3 shadow-lg">
                 <h4 class="mb-2 text-sm font-bold text-gray-700">Legend</h4>
                 <div class="space-y-1 text-xs">
@@ -160,11 +141,6 @@ onUnmounted(() => {
                     <div class="flex items-center gap-2"><div class="h-3 w-3 rounded-full bg-green-500"></div> ONT Online</div>
                     <div class="flex items-center gap-2"><div class="h-3 w-3 rounded-full bg-red-500"></div> ONT Offline/LOS</div>
                 </div>
-            </div>
-
-            <!-- Loading -->
-            <div v-if="loading" class="absolute inset-0 z-[1001] flex items-center justify-center bg-white/60">
-                <div class="text-gray-600 font-semibold">Loading map data...</div>
             </div>
 
             <div ref="mapContainer" class="h-full w-full"></div>

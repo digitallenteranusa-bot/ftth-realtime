@@ -94,6 +94,51 @@ class ZteOltDriver implements OltDriverInterface
         return $data;
     }
 
+    public function registerOnt(int $slot, int $port, int $ontId, string $serialNumber, string $lineProfile, string $serviceProfile): bool
+    {
+        $commands = [
+            "configure terminal",
+            "interface gpon-olt_1/{$slot}/{$port}",
+            "onu {$ontId} type {$serviceProfile} sn {$serialNumber}",
+            "exit",
+            "interface gpon-onu_1/{$slot}/{$port}:{$ontId}",
+            "tcont 1 name tcont1 profile {$lineProfile}",
+            "gemport 1 name gem1 tcont 1",
+            "exit",
+            "pon-onu-mng gpon-onu_1/{$slot}/{$port}:{$ontId}",
+            "service 1 gemport 1 vlan 100",
+            "exit",
+            "end",
+            "write memory",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Error') && !str_contains($output, 'Invalid');
+    }
+
+    public function deregisterOnt(int $slot, int $port, int $ontId): bool
+    {
+        $commands = [
+            "configure terminal",
+            "interface gpon-olt_1/{$slot}/{$port}",
+            "no onu {$ontId}",
+            "exit",
+            "end",
+            "write memory",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Error') && !str_contains($output, 'Invalid');
+    }
+
     protected function parseUnregistered(string $output): array
     {
         $onts = [];

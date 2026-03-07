@@ -9,4 +9,6 @@ interface OltDriverInterface
     public function getOntStatus(int $slot, int $port, int $ontId): array;
     public function getOpticalPower(int $slot, int $port, int $ontId): array;
     public function getUnregisteredOnts(): array;
+    public function registerOnt(int $slot, int $port, int $ontId, string $serialNumber, string $lineProfile, string $serviceProfile): bool;
+    public function deregisterOnt(int $slot, int $port, int $ontId): bool;
 }

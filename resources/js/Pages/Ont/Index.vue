@@ -21,7 +21,11 @@ watch([search, status], () => applyFilters());
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">ONT Devices</h2>
-                <Link :href="route('onts.create')" class="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700">Add ONT</Link>
+                <div class="flex items-center space-x-2">
+                    <a :href="route('export.onts.csv')" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">CSV</a>
+                    <a :href="route('export.onts.pdf')" target="_blank" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">PDF</a>
+                    <Link :href="route('onts.create')" class="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700">Add ONT</Link>
+                </div>
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

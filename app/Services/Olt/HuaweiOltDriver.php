@@ -88,6 +88,45 @@ class HuaweiOltDriver implements OltDriverInterface
         return $data;
     }
 
+    public function registerOnt(int $slot, int $port, int $ontId, string $serialNumber, string $lineProfile, string $serviceProfile): bool
+    {
+        $commands = [
+            "config",
+            "interface gpon 0/{$slot}",
+            "ont add {$port} {$ontId} sn-auth {$serialNumber} omci ont-lineprofile-id {$lineProfile} ont-srvprofile-id {$serviceProfile}",
+            "ont port native-vlan {$port} {$ontId} eth 1 vlan 100",
+            "quit",
+            "quit",
+            "save",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Failure') && !str_contains($output, 'Error');
+    }
+
+    public function deregisterOnt(int $slot, int $port, int $ontId): bool
+    {
+        $commands = [
+            "config",
+            "interface gpon 0/{$slot}",
+            "ont delete {$port} {$ontId}",
+            "quit",
+            "quit",
+            "save",
+        ];
+
+        $output = '';
+        foreach ($commands as $cmd) {
+            $output .= $this->execute($cmd);
+        }
+
+        return !str_contains($output, 'Failure') && !str_contains($output, 'Error');
+    }
+
     protected function parseUnregistered(string $output): array
     {
         $onts = [];
