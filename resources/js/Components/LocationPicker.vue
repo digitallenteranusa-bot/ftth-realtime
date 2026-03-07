@@ -24,7 +24,7 @@ const expanded = ref(false);
 let map = null;
 let marker = null;
 
-const defaultCenter = [-8.0503, 111.7068];
+const defaultCenter = [-8.1092, 111.6193];
 
 function initMap() {
     if (map) {
