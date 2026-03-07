@@ -64,22 +64,14 @@ monitoring_logs, pppoe_sessions, interface_traffics
 
 ## Panduan Instalasi - Ubuntu 22.04
 
-### 1. Update Sistem
+### 1. Update Sistem dan Install Paket Dasar
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl git unzip software-properties-common
+sudo apt install -y curl git unzip wget software-properties-common apt-transport-https ca-certificates
 ```
 
-### 2. Install Prerequisite dan PHP 8.2
-
-Install `software-properties-common` terlebih dahulu (diperlukan untuk `add-apt-repository`):
-
-```bash
-sudo apt install -y software-properties-common
-```
-
-Tambahkan PPA Ondrej PHP dan install PHP 8.2:
+### 2. Install PHP 8.2 dan Ekstensi
 
 ```bash
 sudo add-apt-repository ppa:ondrej/php -y
@@ -102,8 +94,9 @@ php -m | grep sockets
 ### 3. Install Composer
 
 ```bash
-cd /tmp
-curl -sS https://getcomposer.org/installer | php
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
 sudo mv composer.phar /usr/local/bin/composer
 ```
 
