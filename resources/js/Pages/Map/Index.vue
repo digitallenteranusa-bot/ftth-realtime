@@ -23,6 +23,22 @@ const deviceIcons = {
     odp: { color: '#0ea5e9', symbol: 'DP', size: 14 },
 };
 
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcRouteDistance(coords) {
+    let total = 0;
+    for (let i = 1; i < coords.length; i++) {
+        total += haversine(coords[i-1][0], coords[i-1][1], coords[i][0], coords[i][1]);
+    }
+    return total >= 1000 ? (total/1000).toFixed(2) + ' km' : Math.round(total) + ' m';
+}
+
 function createIcon(type, status) {
     const cfg = deviceIcons[type];
     if (!cfg) {
@@ -83,10 +99,11 @@ function buildLayers() {
         if (!r.coordinates || r.coordinates.length < 2) return;
         const latlngs = r.coordinates.map(c => [c[0], c[1]]);
         const weight = r.source_type === 'olt' ? 4 : r.source_type === 'odc' ? 3 : 2;
+        const dist = calcRouteDistance(r.coordinates);
         L.polyline(latlngs, {
             color: r.color || '#3388ff', weight, opacity: 0.8,
             dashArray: '10 6', className: 'animated-dash',
-        }).bindPopup(`<b>${r.name || 'Fiber Route'}</b><br>${r.source_type} -> ${r.destination_type}`)
+        }).bindPopup(`<b>${r.name || 'Fiber Route'}</b><br>${r.source_type} → ${r.destination_type}<br>Jarak: <b>${dist}</b>`)
           .addTo(layers.fiber);
     });
 
