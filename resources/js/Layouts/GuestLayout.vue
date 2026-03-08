@@ -20,11 +20,12 @@ const { isDark, toggle: toggleDark } = useDarkMode();
 
         <div>
             <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500 dark:text-gray-400" />
+                <img src="/img/logo.png" alt="FTTH Monitoring" class="h-24 w-auto" />
             </Link>
         </div>
+        <h1 class="mt-3 text-xl font-bold text-gray-700 dark:text-gray-200">FTTH Monitoring System</h1>
 
-        <div class="mt-6 w-full overflow-hidden bg-white dark:bg-gray-800 px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg transition-colors duration-200">
+        <div class="mt-4 w-full overflow-hidden bg-white dark:bg-gray-800 px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg transition-colors duration-200">
             <slot />
         </div>
     </div>
