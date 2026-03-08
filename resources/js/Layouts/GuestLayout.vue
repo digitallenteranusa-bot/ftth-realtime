@@ -20,7 +20,8 @@ const { isDark, toggle: toggleDark } = useDarkMode();
 
         <div>
             <Link href="/">
-                <img src="/img/logo.png" alt="FTTH Monitoring" class="h-24 w-auto" />
+                <img v-if="isDark" src="/img/logo-dark.png" alt="FTTH Monitoring" class="h-24 w-auto" />
+                <img v-else src="/img/logo.png" alt="FTTH Monitoring" class="h-24 w-auto" />
             </Link>
         </div>
         <h1 class="mt-3 text-xl font-bold text-gray-700 dark:text-gray-200">FTTH Monitoring System</h1>
