@@ -109,8 +109,9 @@ function buildLayers() {
 
     layers.ont = L.layerGroup();
     elements.onts.forEach(d => {
+        const customerName = d.customer ? d.customer.name : '-';
         L.marker([d.lat, d.lng], { icon: createIcon(null, d.status) })
-            .bindPopup(`<b>ONT: ${d.name || d.serial_number}</b><br>Status: <span style="color:${statusColors[d.status]}">${d.status}</span><br>Rx Power: ${d.rx_power ?? '-'} dBm`)
+            .bindPopup(`<b>${customerName}</b><br>ONT: ${d.name || d.serial_number}<br>Status: <span style="color:${statusColors[d.status]}">${d.status}</span><br>Rx Power: ${d.rx_power ?? '-'} dBm`)
             .addTo(layers.ont);
     });
 
