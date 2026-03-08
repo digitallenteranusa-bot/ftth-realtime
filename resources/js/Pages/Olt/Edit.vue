@@ -11,6 +11,7 @@ const form = useForm({
     snmp_community: props.olt.snmp_community, snmp_port: props.olt.snmp_port,
     is_active: props.olt.is_active, location: props.olt.location || '',
     lat: props.olt.lat || '', lng: props.olt.lng || '', notes: props.olt.notes || '',
+    pon_count: props.olt.pon_ports_count || 8,
 });
 function submit() { form.put(route('olts.update', props.olt.id)); }
 </script>
@@ -53,6 +54,15 @@ function submit() { form.put(route('olts.update', props.olt.id)); }
                                     <option value="other">Lainnya</option>
                                 </optgroup>
                             </select></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Jumlah PON Port *</label>
+                            <select v-model="form.pon_count" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                                <option :value="1">1 PON</option>
+                                <option :value="2">2 PON</option>
+                                <option :value="4">4 PON</option>
+                                <option :value="8">8 PON</option>
+                                <option :value="16">16 PON</option>
+                            </select>
+                        </div>
                         <div><label class="block text-sm font-medium text-gray-700">Host *</label><input v-model="form.host" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">SSH Port</label><input v-model="form.ssh_port" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Username</label><input v-model="form.username" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>

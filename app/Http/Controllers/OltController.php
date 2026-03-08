@@ -72,7 +72,7 @@ class OltController extends Controller
     public function edit(Olt $olt)
     {
         return Inertia::render('Olt/Edit', [
-            'olt' => $olt,
+            'olt' => $olt->loadCount('ponPorts'),
         ]);
     }
 
@@ -93,7 +93,11 @@ class OltController extends Controller
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'notes' => 'nullable|string',
+            'pon_count' => 'nullable|integer|in:1,2,4,8,16',
         ]);
+
+        $ponCount = $validated['pon_count'] ?? null;
+        unset($validated['pon_count']);
 
         if (empty($validated['password'])) unset($validated['password']);
         $oldLat = $olt->lat;
@@ -109,6 +113,29 @@ class OltController extends Controller
                     $route->update(['coordinates' => $coords]);
                 }
             });
+        }
+
+        // Sync PON port count
+        if ($ponCount !== null) {
+            $currentCount = $olt->ponPorts()->count();
+            if ($ponCount > $currentCount) {
+                for ($p = $currentCount + 1; $p <= $ponCount; $p++) {
+                    PonPort::create([
+                        'olt_id' => $olt->id,
+                        'slot' => 0,
+                        'port' => $p,
+                        'description' => "PON {$p}",
+                        'is_active' => true,
+                    ]);
+                }
+            } elseif ($ponCount < $currentCount) {
+                // Remove excess ports from the end (only if no ONTs attached)
+                $olt->ponPorts()
+                    ->whereDoesntHave('onts')
+                    ->orderByDesc('port')
+                    ->limit($currentCount - $ponCount)
+                    ->delete();
+            }
         }
 
         return redirect()->route('olts.index')->with('success', 'OLT berhasil diupdate.');
