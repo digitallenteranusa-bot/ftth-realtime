@@ -18,9 +18,9 @@ function addPort(oltId) {
     });
 }
 
-function deletePort(id) {
+function deletePort(portId) {
     if (confirm('Hapus PON Port ini?')) {
-        router.delete(route('pon-ports.destroy', id));
+        router.delete(route('pon-ports.destroy', { id: portId }));
     }
 }
 </script>

@@ -54,7 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // PON Ports
     Route::post('/pon-ports', [PonPortController::class, 'store'])->name('pon-ports.store')->middleware('role:admin,operator');
-    Route::delete('/pon-ports/{pon_port}', [PonPortController::class, 'destroy'])->name('pon-ports.destroy')->middleware('role:admin,operator');
+    Route::delete('/pon-ports/{id}', [PonPortController::class, 'destroy'])->name('pon-ports.destroy')->middleware('role:admin,operator');
 
     // ODC
     Route::get('/odcs', [OdcController::class, 'index'])->name('odcs.index');
