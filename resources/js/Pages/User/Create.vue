@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 const form = useForm({
-    name: '', email: '', password: '', role: 'viewer',
+    name: '', email: '', password: '', role: 'teknisi',
 });
 function submit() { form.post(route('users.store')); }
 </script>
@@ -34,7 +34,7 @@ function submit() { form.post(route('users.store')); }
                         <select v-model="form.role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             <option value="admin">Admin</option>
                             <option value="operator">Operator</option>
-                            <option value="viewer">Viewer</option>
+                            <option value="teknisi">Teknisi</option>
                         </select>
                         <p v-if="form.errors.role" class="mt-1 text-sm text-red-600">{{ form.errors.role }}</p>
                     </div>

@@ -38,7 +38,7 @@ function submit() { form.put(route('users.update', props.user.id)); }
                         <select v-model="form.role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                             <option value="admin">Admin</option>
                             <option value="operator">Operator</option>
-                            <option value="viewer">Viewer</option>
+                            <option value="teknisi">Teknisi</option>
                         </select>
                         <p v-if="form.errors.role" class="mt-1 text-sm text-red-600">{{ form.errors.role }}</p>
                     </div>

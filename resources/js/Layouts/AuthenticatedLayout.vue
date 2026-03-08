@@ -32,15 +32,15 @@ const { isDark, toggle: toggleDark } = useDarkMode();
                             <div class="hidden space-x-4 sm:-my-px sm:ms-10 sm:flex overflow-x-auto">
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</NavLink>
                                 <NavLink :href="route('map')" :active="route().current('map')">Map</NavLink>
-                                <NavLink :href="route('mikrotiks.index')" :active="route().current('mikrotiks.*')">Mikrotik</NavLink>
-                                <NavLink :href="route('olts.index')" :active="route().current('olts.*')">OLT</NavLink>
-                                <NavLink :href="route('odcs.index')" :active="route().current('odcs.*')">ODC</NavLink>
-                                <NavLink :href="route('odps.index')" :active="route().current('odps.*')">ODP</NavLink>
+                                <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('mikrotiks.index')" :active="route().current('mikrotiks.*')">Mikrotik</NavLink>
+                                <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('olts.index')" :active="route().current('olts.*')">OLT</NavLink>
+                                <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('odcs.index')" :active="route().current('odcs.*')">ODC</NavLink>
+                                <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('odps.index')" :active="route().current('odps.*')">ODP</NavLink>
                                 <NavLink :href="route('onts.index')" :active="route().current('onts.*')">ONT</NavLink>
                                 <NavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</NavLink>
                                 <NavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</NavLink>
                                 <NavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</NavLink>
-                                <NavLink :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</NavLink>
+                                <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</NavLink>
                                 <NavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('users.index')" :active="route().current('users.*')">Users</NavLink>
                                 <NavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</NavLink>
                             </div>
@@ -106,15 +106,15 @@ const { isDark, toggle: toggleDark } = useDarkMode();
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">Dashboard</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('map')" :active="route().current('map')">Map</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('mikrotiks.index')" :active="route().current('mikrotiks.*')">Mikrotik</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('olts.index')" :active="route().current('olts.*')">OLT</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('odcs.index')" :active="route().current('odcs.*')">ODC</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('odps.index')" :active="route().current('odps.*')">ODP</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('mikrotiks.index')" :active="route().current('mikrotiks.*')">Mikrotik</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('olts.index')" :active="route().current('olts.*')">OLT</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('odcs.index')" :active="route().current('odcs.*')">ODC</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('odps.index')" :active="route().current('odps.*')">ODP</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('onts.index')" :active="route().current('onts.*')">ONT</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('users.index')" :active="route().current('users.*')">Users</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</ResponsiveNavLink>
                     </div>

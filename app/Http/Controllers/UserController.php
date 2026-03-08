@@ -37,7 +37,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'string', 'min:8'],
-            'role' => 'required|in:admin,operator,viewer',
+            'role' => 'required|in:admin,operator,teknisi',
         ]);
 
         $validated['password'] = $validated['password']; // will be hashed by cast
@@ -60,7 +60,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:admin,operator,viewer',
+            'role' => 'required|in:admin,operator,teknisi',
         ]);
 
         $data = [
