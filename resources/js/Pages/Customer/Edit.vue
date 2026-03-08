@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 const props = defineProps({ customer: Object });
-const form = useForm({ name: props.customer.name, address: props.customer.address, phone: props.customer.phone, email: props.customer.email || '', nik: props.customer.nik || '', lat: props.customer.lat || '', lng: props.customer.lng || '', status: props.customer.status, notes: props.customer.notes || '' });
+const form = useForm({ name: props.customer.name, address: props.customer.address, phone: props.customer.phone, bandwidth: props.customer.bandwidth || '', lat: props.customer.lat || '', lng: props.customer.lng || '', status: props.customer.status, notes: props.customer.notes || '' });
 function submit() { form.put(route('customers.update', props.customer.id)); }
 </script>
 
@@ -16,11 +17,24 @@ function submit() { form.put(route('customers.update', props.customer.id)); }
                     <div><label class="block text-sm font-medium text-gray-700">Name *</label><input v-model="form.name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Phone *</label><input v-model="form.phone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div class="sm:col-span-2"><label class="block text-sm font-medium text-gray-700">Address *</label><input v-model="form.address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
-                    <div><label class="block text-sm font-medium text-gray-700">Email</label><input v-model="form.email" type="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
-                    <div><label class="block text-sm font-medium text-gray-700">NIK</label><input v-model="form.nik" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Bandwidth</label>
+                        <select v-model="form.bandwidth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <option value="">-- Pilih Bandwidth --</option>
+                            <option value="5 Mbps">5 Mbps</option>
+                            <option value="10 Mbps">10 Mbps</option>
+                            <option value="20 Mbps">20 Mbps</option>
+                            <option value="30 Mbps">30 Mbps</option>
+                            <option value="50 Mbps">50 Mbps</option>
+                            <option value="100 Mbps">100 Mbps</option>
+                            <option value="200 Mbps">200 Mbps</option>
+                            <option value="500 Mbps">500 Mbps</option>
+                            <option value="1 Gbps">1 Gbps</option>
+                        </select>
+                    </div>
                     <div><label class="block text-sm font-medium text-gray-700">Status</label><select v-model="form.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></div>
                     <div><label class="block text-sm font-medium text-gray-700">Latitude</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                     <div><label class="block text-sm font-medium text-gray-700">Longitude</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                    <LocationPicker :lat="form.lat" :lng="form.lng" @update:lat="v => form.lat = v" @update:lng="v => form.lng = v" label="Pilih Lokasi di Peta" />
                 </div>
                 <div><label class="block text-sm font-medium text-gray-700">Notes</label><textarea v-model="form.notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea></div>
                 <div class="flex justify-end gap-3">

@@ -15,7 +15,7 @@ class CustomerController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%");
+                  ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -36,8 +36,7 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'nik' => 'nullable|string|unique:customers|max:20',
+            'bandwidth' => 'nullable|string|max:20',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'status' => 'nullable|in:active,inactive,suspended',
@@ -66,8 +65,7 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'nik' => 'nullable|string|max:20|unique:customers,nik,' . $customer->id,
+            'bandwidth' => 'nullable|string|max:20',
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'status' => 'nullable|in:active,inactive,suspended',

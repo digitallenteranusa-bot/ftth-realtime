@@ -23,13 +23,14 @@ watch(search, () => applyFilters());
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, phone, NIK..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
+            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, phone, address..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
             <div class="overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Phone</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Address</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Bandwidth</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
                         <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
                     </tr></thead>
@@ -38,6 +39,7 @@ watch(search, () => applyFilters());
                             <td class="px-6 py-4 text-sm font-medium"><Link :href="route('customers.show', c.id)" class="text-teal-600 hover:underline">{{ c.name }}</Link></td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ c.phone }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">{{ c.address }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ c.bandwidth || '-' }}</td>
                             <td class="px-6 py-4 text-sm"><span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="{ 'bg-green-100 text-green-800': c.status === 'active', 'bg-red-100 text-red-800': c.status === 'inactive', 'bg-yellow-100 text-yellow-800': c.status === 'suspended' }">{{ c.status }}</span></td>
                             <td class="px-6 py-4 text-right text-sm">
                                 <Link :href="route('customers.edit', c.id)" class="text-indigo-600 hover:underline mr-3">Edit</Link>

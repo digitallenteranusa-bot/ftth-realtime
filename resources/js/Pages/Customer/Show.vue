@@ -16,9 +16,8 @@ defineProps({ customer: Object });
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg bg-white p-6 shadow">
                 <div><span class="text-xs text-gray-500">Phone</span><p class="font-semibold">{{ customer.phone }}</p></div>
-                <div><span class="text-xs text-gray-500">Email</span><p class="font-semibold">{{ customer.email || '-' }}</p></div>
-                <div><span class="text-xs text-gray-500">NIK</span><p class="font-semibold">{{ customer.nik || '-' }}</p></div>
-                <div><span class="text-xs text-gray-500">Status</span><p><span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="{ 'bg-green-100 text-green-800': customer.status === 'active' }">{{ customer.status }}</span></p></div>
+                <div><span class="text-xs text-gray-500">Bandwidth</span><p class="font-semibold">{{ customer.bandwidth || '-' }}</p></div>
+                <div><span class="text-xs text-gray-500">Status</span><p><span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="{ 'bg-green-100 text-green-800': customer.status === 'active', 'bg-red-100 text-red-800': customer.status === 'inactive', 'bg-yellow-100 text-yellow-800': customer.status === 'suspended' }">{{ customer.status }}</span></p></div>
                 <div class="sm:col-span-2"><span class="text-xs text-gray-500">Address</span><p class="font-semibold">{{ customer.address }}</p></div>
             </div>
             <div class="rounded-lg bg-white p-6 shadow">
