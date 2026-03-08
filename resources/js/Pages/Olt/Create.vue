@@ -70,7 +70,8 @@ function submit() { form.post(route('olts.store')); }
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Host *</label>
-                            <input v-model="form.host" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                            <input v-model="form.host" type="text" :class="{ 'border-red-500': form.errors.host }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                            <p v-if="form.errors.host" class="mt-1 text-sm text-red-600">{{ form.errors.host }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">SSH Port</label>

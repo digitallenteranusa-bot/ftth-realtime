@@ -10,10 +10,24 @@ use Inertia\Inertia;
 
 class OdcController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Odc::with('olt:id,name')->withCount('odps');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhereHas('olt', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         return Inertia::render('Odc/Index', [
-            'odcs' => Odc::with('olt:id,name')->withCount('odps')->latest()->paginate(15),
+            'odcs' => $query->latest()->paginate(15)->withQueryString(),
+            'filters' => $request->only(['search']),
         ]);
     }
 

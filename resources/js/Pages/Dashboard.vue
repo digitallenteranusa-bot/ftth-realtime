@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import TrafficChart from '@/Components/TrafficChart.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     stats: Object,
@@ -9,6 +10,14 @@ const props = defineProps({
     recentTickets: Array,
     mikrotiks: Array,
 });
+
+let refreshInterval = null;
+onMounted(() => {
+    refreshInterval = setInterval(() => {
+        router.reload({ only: ['stats', 'recentAlarms', 'recentTickets'], preserveScroll: true });
+    }, 30000);
+});
+onUnmounted(() => { if (refreshInterval) clearInterval(refreshInterval); });
 </script>
 
 <template>

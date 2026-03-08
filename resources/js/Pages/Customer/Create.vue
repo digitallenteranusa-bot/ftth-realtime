@@ -25,7 +25,7 @@ function submit() { form.post(route('customers.store')); }
                         <div><label class="block text-sm font-medium text-gray-700">Phone *</label><input v-model="form.phone" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><p v-if="form.errors.phone" class="mt-1 text-sm text-red-600">{{ form.errors.phone }}</p></div>
                         <div class="sm:col-span-2"><label class="block text-sm font-medium text-gray-700">Alamat *</label><input v-model="form.address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><p v-if="form.errors.address" class="mt-1 text-sm text-red-600">{{ form.errors.address }}</p></div>
                         <div><label class="block text-sm font-medium text-gray-700">Bandwidth</label>
-                            <select v-model="form.bandwidth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <select v-model="form.bandwidth" :class="{ 'border-red-500': form.errors.bandwidth }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                                 <option value="">-- Pilih Bandwidth --</option>
                                 <option value="5 Mbps">5 Mbps</option>
                                 <option value="10 Mbps">10 Mbps</option>
@@ -37,6 +37,7 @@ function submit() { form.post(route('customers.store')); }
                                 <option value="500 Mbps">500 Mbps</option>
                                 <option value="1 Gbps">1 Gbps</option>
                             </select>
+                            <div v-if="form.errors.bandwidth" class="text-sm text-red-600 mt-1">{{ form.errors.bandwidth }}</div>
                         </div>
                     </div>
                 </div>
@@ -45,12 +46,12 @@ function submit() { form.post(route('customers.store')); }
                 <div>
                     <h3 class="mb-3 text-sm font-bold text-gray-800 border-b pb-2">Data ONT</h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div><label class="block text-sm font-medium text-gray-700">Merk / Name ONT</label><input v-model="form.ont_name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Merk / Name ONT</label><input v-model="form.ont_name" type="text" :class="{ 'border-red-500': form.errors.ont_name }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><div v-if="form.errors.ont_name" class="text-sm text-red-600 mt-1">{{ form.errors.ont_name }}</div></div>
                         <div><label class="block text-sm font-medium text-gray-700">Serial Number</label><input v-model="form.ont_serial_number" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><p v-if="form.errors.ont_serial_number" class="mt-1 text-sm text-red-600">{{ form.errors.ont_serial_number }}</p></div>
-                        <div><label class="block text-sm font-medium text-gray-700">ODP</label><select v-model="form.odp_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- Pilih ODP --</option><option v-for="o in odps" :key="o.id" :value="o.id">{{ o.name }}</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700">OLT</label><select v-model="form.olt_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- Pilih OLT --</option><option v-for="o in olts" :key="o.id" :value="o.id">{{ o.name }}</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700">PON Port</label><select v-model="form.pon_port_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- None --</option><option v-for="p in ponPorts.filter(p => !form.olt_id || p.olt_id == form.olt_id)" :key="p.id" :value="p.id">{{ p.olt?.name }} - {{ p.slot }}/{{ p.port }}</option></select></div>
-                        <div><label class="block text-sm font-medium text-gray-700">ONT ID Number</label><input v-model="form.ont_id_number" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">ODP</label><select v-model="form.odp_id" :class="{ 'border-red-500': form.errors.odp_id }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- Pilih ODP --</option><option v-for="o in odps" :key="o.id" :value="o.id">{{ o.name }}</option></select><div v-if="form.errors.odp_id" class="text-sm text-red-600 mt-1">{{ form.errors.odp_id }}</div></div>
+                        <div><label class="block text-sm font-medium text-gray-700">OLT</label><select v-model="form.olt_id" :class="{ 'border-red-500': form.errors.olt_id }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- Pilih OLT --</option><option v-for="o in olts" :key="o.id" :value="o.id">{{ o.name }}</option></select><div v-if="form.errors.olt_id" class="text-sm text-red-600 mt-1">{{ form.errors.olt_id }}</div></div>
+                        <div><label class="block text-sm font-medium text-gray-700">PON Port</label><select v-model="form.pon_port_id" :class="{ 'border-red-500': form.errors.pon_port_id }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="">-- None --</option><option v-for="p in ponPorts.filter(p => !form.olt_id || p.olt_id == form.olt_id)" :key="p.id" :value="p.id">{{ p.olt?.name }} - {{ p.slot }}/{{ p.port }}</option></select><div v-if="form.errors.pon_port_id" class="text-sm text-red-600 mt-1">{{ form.errors.pon_port_id }}</div></div>
+                        <div><label class="block text-sm font-medium text-gray-700">ONT ID Number</label><input v-model="form.ont_id_number" type="number" :class="{ 'border-red-500': form.errors.ont_id_number }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><div v-if="form.errors.ont_id_number" class="text-sm text-red-600 mt-1">{{ form.errors.ont_id_number }}</div></div>
                     </div>
                 </div>
 
@@ -58,13 +59,13 @@ function submit() { form.post(route('customers.store')); }
                 <div>
                     <h3 class="mb-3 text-sm font-bold text-gray-800 border-b pb-2">Lokasi</h3>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div><label class="block text-sm font-medium text-gray-700">Latitude</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
-                        <div><label class="block text-sm font-medium text-gray-700">Longitude</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Latitude</label><input v-model="form.lat" type="number" step="any" :class="{ 'border-red-500': form.errors.lat }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><div v-if="form.errors.lat" class="text-sm text-red-600 mt-1">{{ form.errors.lat }}</div></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Longitude</label><input v-model="form.lng" type="number" step="any" :class="{ 'border-red-500': form.errors.lng }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /><div v-if="form.errors.lng" class="text-sm text-red-600 mt-1">{{ form.errors.lng }}</div></div>
                         <LocationPicker :lat="form.lat" :lng="form.lng" @update:lat="v => form.lat = v" @update:lng="v => form.lng = v" label="Pilih Lokasi di Peta" />
                     </div>
                 </div>
 
-                <div><label class="block text-sm font-medium text-gray-700">Notes</label><textarea v-model="form.notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-700">Notes</label><textarea v-model="form.notes" rows="3" :class="{ 'border-red-500': form.errors.notes }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea><div v-if="form.errors.notes" class="text-sm text-red-600 mt-1">{{ form.errors.notes }}</div></div>
                 <div class="flex justify-end gap-3">
                     <Link :href="route('customers.index')" class="rounded-md bg-gray-200 px-4 py-2 text-sm text-gray-700">Cancel</Link>
                     <button type="submit" :disabled="form.processing" class="rounded-md bg-teal-600 px-4 py-2 text-sm text-white disabled:opacity-50">Save</button>

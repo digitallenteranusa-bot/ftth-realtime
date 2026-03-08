@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AlarmController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BandwidthPlanController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\OltController;
 use App\Http\Controllers\OntController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TroubleTicketController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -124,6 +126,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/export/onts/csv', [ExportController::class, 'ontsCsv'])->name('export.onts.csv');
     Route::get('/export/onts/pdf', [ExportController::class, 'ontsPdf'])->name('export.onts.pdf');
     Route::get('/export/alarms/csv', [ExportController::class, 'alarmsCsv'])->name('export.alarms.csv');
+
+    // Audit Logs (admin only)
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('role:admin');
+
+    // Users (admin only)
+    Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('role:admin');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create')->middleware('role:admin');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('role:admin');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit')->middleware('role:admin');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update')->middleware('role:admin');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy')->middleware('role:admin');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

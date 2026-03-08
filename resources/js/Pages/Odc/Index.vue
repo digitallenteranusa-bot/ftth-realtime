@@ -1,8 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-defineProps({ odcs: Object });
+import { ref, watch } from 'vue';
+const props = defineProps({ odcs: Object, filters: Object });
+const search = ref(props.filters?.search || '');
+function applyFilters() { router.get(route('odcs.index'), { search: search.value }, { preserveState: true, replace: true }); }
 function destroy(id) { if (confirm('Hapus ODC ini?')) router.delete(route('odcs.destroy', id)); }
+watch(search, () => applyFilters());
 </script>
 
 <template>
@@ -15,10 +19,12 @@ function destroy(id) { if (confirm('Hapus ODC ini?')) router.delete(route('odcs.
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, address..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
             <div class="overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">OLT</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Address</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Capacity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">ODPs</th>
@@ -28,6 +34,7 @@ function destroy(id) { if (confirm('Hapus ODC ini?')) router.delete(route('odcs.
                     <tbody class="divide-y divide-gray-200 bg-white">
                         <tr v-for="odc in odcs.data" :key="odc.id">
                             <td class="px-6 py-4 text-sm font-medium"><Link :href="route('odcs.show', odc.id)" class="text-indigo-600 hover:underline">{{ odc.name }}</Link></td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ odc.olt?.name || '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odc.address || '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odc.used_ports }}/{{ odc.capacity }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odc.odps_count }}</td>
@@ -39,6 +46,9 @@ function destroy(id) { if (confirm('Hapus ODC ini?')) router.delete(route('odcs.
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-4 flex justify-center" v-if="odcs.links">
+                <Link v-for="link in odcs.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />
             </div>
         </div></div>
     </AuthenticatedLayout>

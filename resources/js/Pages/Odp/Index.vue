@@ -1,8 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-defineProps({ odps: Object });
+import { ref, watch } from 'vue';
+const props = defineProps({ odps: Object, filters: Object });
+const search = ref(props.filters?.search || '');
+function applyFilters() { router.get(route('odps.index'), { search: search.value }, { preserveState: true, replace: true }); }
 function destroy(id) { if (confirm('Hapus ODP ini?')) router.delete(route('odps.destroy', id)); }
+watch(search, () => applyFilters());
 </script>
 
 <template>
@@ -15,6 +19,7 @@ function destroy(id) { if (confirm('Hapus ODP ini?')) router.delete(route('odps.
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, ODC..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
             <div class="overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
@@ -22,6 +27,7 @@ function destroy(id) { if (confirm('Hapus ODP ini?')) router.delete(route('odps.
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">ODC</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Capacity</th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">ONTs</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Splitter</th>
                         <th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
                     </tr></thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
@@ -30,6 +36,7 @@ function destroy(id) { if (confirm('Hapus ODP ini?')) router.delete(route('odps.
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odp.odc?.name || '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odp.used_ports }}/{{ odp.capacity }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ odp.onts_count }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ odp.splitter_ratio || '-' }}</td>
                             <td class="px-6 py-4 text-right text-sm">
                                 <Link :href="route('odps.edit', odp.id)" class="text-indigo-600 hover:underline mr-3">Edit</Link>
                                 <button @click="destroy(odp.id)" class="text-red-600 hover:underline">Delete</button>
@@ -37,6 +44,9 @@ function destroy(id) { if (confirm('Hapus ODP ini?')) router.delete(route('odps.
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-4 flex justify-center" v-if="odps.links">
+                <Link v-for="link in odps.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />
             </div>
         </div></div>
     </AuthenticatedLayout>

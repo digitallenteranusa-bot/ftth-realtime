@@ -9,10 +9,23 @@ use Inertia\Inertia;
 
 class OdpController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Odp::with('odc:id,name')->withCount('onts');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('odc', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         return Inertia::render('Odp/Index', [
-            'odps' => Odp::with('odc')->withCount('onts')->latest()->paginate(15),
+            'odps' => $query->latest()->paginate(15)->withQueryString(),
+            'filters' => $request->only(['search']),
         ]);
     }
 

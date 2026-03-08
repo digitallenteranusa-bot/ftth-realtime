@@ -1,6 +1,6 @@
 # FTTH Real-Time Monitoring System - Checklist Improvement
 
-## Status: 10/10 Selesai
+## Status: 20/21 Selesai
 
 ---
 
@@ -235,22 +235,168 @@ Command per vendor:
 
 ---
 
-## Improvement Lanjutan (Belum Dikerjakan)
-
-| No | Item | Prioritas |
-|----|------|-----------|
-| 11 | Halaman Audit Log viewer (admin) | Medium |
-| 12 | Dashboard widget realtime (auto-refresh stats) | Medium |
-| 13 | User management CRUD (admin) | High |
-| 14 | Pagination & search di semua halaman index | Medium |
-| 15 | Form validation error handling yang konsisten | Low |
-| 16 | Dark mode / theme switcher | Low |
-| 17 | Unit test & feature test | High |
-| 18 | API endpoint untuk mobile app | Medium |
-| 19 | Backup & restore database | Medium |
-| 20 | Multi-language (i18n) support | Low |
-| 21 | Performance optimization (caching, lazy loading) | Medium |
+## Improvement Lanjutan
 
 ---
 
-*Dokumen ini terakhir diupdate: 7 Maret 2026*
+### ✅ #11 - Halaman Audit Log Viewer (Admin)
+
+| Item | File | Status |
+|------|------|--------|
+| AuditLogController | `app/Http/Controllers/AuditLogController.php` | ✅ |
+| AuditLog/Index.vue | `resources/js/Pages/AuditLog/Index.vue` | ✅ |
+| Route audit-logs | `routes/web.php` - `GET /audit-logs` | ✅ |
+| NavLink desktop | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+| NavLink responsive | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+
+**Catatan:** Halaman audit log menampilkan tabel dengan kolom: Waktu, User, Action (color-coded badges), Model, Detail, IP Address. Filter dropdown untuk Action, Model Type, dan User. Klik row untuk expand dan lihat old/new values sebagai JSON. Hanya admin yang bisa akses.
+
+---
+
+### ✅ #12 - Dashboard Auto-Refresh
+
+| Item | File | Status |
+|------|------|--------|
+| Auto-refresh 30 detik | `resources/js/Pages/Dashboard.vue` | ✅ |
+
+**Catatan:** Dashboard auto-refresh stats, alarms, dan tickets setiap 30 detik menggunakan `setInterval` + `router.reload({ only: [...], preserveScroll: true })`. Interval dibersihkan saat komponen di-unmount.
+
+---
+
+### ✅ #13 - User Management CRUD (Admin)
+
+| Item | File | Status |
+|------|------|--------|
+| UserController | `app/Http/Controllers/UserController.php` | ✅ |
+| User/Index.vue | `resources/js/Pages/User/Index.vue` | ✅ |
+| User/Create.vue | `resources/js/Pages/User/Create.vue` | ✅ |
+| User/Edit.vue | `resources/js/Pages/User/Edit.vue` | ✅ |
+| Routes (6 routes) | `routes/web.php` | ✅ |
+| NavLink desktop | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+| NavLink responsive | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+
+**Catatan:** CRUD lengkap untuk user management. Role: admin, operator, viewer (color-coded badges). Password optional saat edit. Tidak bisa menghapus akun sendiri. Semua route dilindungi `middleware('role:admin')`.
+
+---
+
+### ✅ #14 - Pagination & Search di Semua Halaman Index
+
+| Item | File | Status |
+|------|------|--------|
+| ODC search + pagination | `OdcController::index()` + `Odc/Index.vue` | ✅ |
+| ODP search + pagination | `OdpController::index()` + `Odp/Index.vue` | ✅ |
+| Customer search + pagination | `CustomerController::index()` + `Customer/Index.vue` | ✅ |
+| ONT search + pagination | `OntController::index()` + `Ont/Index.vue` | ✅ |
+| User search + pagination | `UserController::index()` + `User/Index.vue` | ✅ |
+| Alarm pagination | `AlarmController::index()` + `Alarm/Index.vue` | ✅ |
+| Audit Log search + pagination | `AuditLogController::index()` + `AuditLog/Index.vue` | ✅ |
+
+**Catatan:** Semua halaman index menggunakan Laravel pagination (`paginate()->withQueryString()`). Search menggunakan `watch` + `router.get` dengan `preserveState: true`. Query string dipertahankan saat navigasi pagination.
+
+---
+
+### ✅ #15 - Form Validation Error Handling
+
+| Item | File | Status |
+|------|------|--------|
+| Customer Create/Edit errors | `Customer/Create.vue`, `Customer/Edit.vue` | ✅ |
+| OLT Create/Edit errors | `Olt/Create.vue`, `Olt/Edit.vue` | ✅ |
+| ODC Create/Edit errors | `Odc/Create.vue`, `Odc/Edit.vue` | ✅ |
+| ODP Create/Edit errors | `Odp/Create.vue`, `Odp/Edit.vue` | ✅ |
+| ONT Create/Edit errors | `Ont/Create.vue`, `Ont/Edit.vue` | ✅ |
+| User Create/Edit errors | `User/Create.vue`, `User/Edit.vue` | ✅ |
+
+**Catatan:** Semua form menampilkan error validation di bawah field menggunakan `form.errors.fieldName`. Input yang error ditandai dengan border merah (`border-red-500`). Menggunakan Inertia `useForm` untuk handling form state dan errors.
+
+---
+
+### ✅ #16 - Dark Mode / Theme Switcher
+
+| Item | File | Status |
+|------|------|--------|
+| useDarkMode composable | `resources/js/Composables/useDarkMode.js` | ✅ |
+| Toggle di layout desktop | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+| Toggle di layout mobile | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+| Tailwind dark mode config | `tailwind.config.js` | ✅ |
+
+**Catatan:** Dark mode menggunakan class strategy Tailwind. Preferensi disimpan di localStorage. Toggle icon sun/moon di navbar.
+
+---
+
+### ⬜ #17 - Unit Test & Feature Test
+
+| Item | File | Status |
+|------|------|--------|
+| Feature tests | - | ⬜ |
+| Unit tests | - | ⬜ |
+
+**Catatan:** Belum dikerjakan. Perlu dibuat test untuk controller, model, dan middleware.
+
+---
+
+### ✅ #18 - API Endpoint untuk Mobile App
+
+| Item | File | Status |
+|------|------|--------|
+| ApiController | `app/Http/Controllers/Api/ApiController.php` | ✅ |
+| API routes | `routes/api.php` | ✅ |
+| Route registration | `bootstrap/app.php` | ✅ |
+| POST /api/login | Token auth via Sanctum | ✅ |
+| GET /api/dashboard | Stats summary | ✅ |
+| GET /api/customers | List + search + paginate | ✅ |
+| GET /api/customers/{id} | Detail with ONT | ✅ |
+| GET /api/onts | List + search + paginate | ✅ |
+| GET /api/onts/{id} | Detail | ✅ |
+| GET /api/alarms | List + filter + paginate | ✅ |
+| GET /api/tickets | List + filter + paginate | ✅ |
+| POST /api/logout | Revoke token | ✅ |
+
+**Catatan:** API menggunakan Laravel Sanctum token authentication. Login mengembalikan bearer token. Semua endpoint selain login memerlukan `auth:sanctum` middleware. Response dalam format JSON dengan pagination.
+
+---
+
+### ✅ #19 - Backup & Restore Database
+
+| Item | File | Status |
+|------|------|--------|
+| BackupDatabase command | `app/Console/Commands/BackupDatabase.php` | ✅ |
+| RestoreDatabase command | `app/Console/Commands/RestoreDatabase.php` | ✅ |
+
+**Catatan:**
+- `php artisan db:backup` - Backup database ke `storage/app/backups/backup_YYYY-MM-DD_HH-mm-ss.sql`
+- `php artisan db:restore {file}` - Restore dari file backup
+- Support MySQL (mysqldump) dan SQLite (file copy)
+- Restore memiliki konfirmasi sebelum eksekusi
+
+---
+
+### ⬜ #20 - Multi-language (i18n) Support
+
+| Item | File | Status |
+|------|------|--------|
+| i18n setup | - | ⬜ |
+
+**Catatan:** Belum dikerjakan. Prioritas rendah.
+
+---
+
+### ✅ #21 - Performance Optimization
+
+| Item | File | Status |
+|------|------|--------|
+| Eager loading di controllers | Semua controller | ✅ |
+| Pagination di semua index | Semua controller | ✅ |
+| withQueryString pagination | Semua controller | ✅ |
+| Select specific columns | Map, ODP, ODC controllers | ✅ |
+| withCount instead of loading | Customer, ODC, ODP controllers | ✅ |
+
+**Catatan:** Optimasi yang dilakukan:
+- Eager loading (`with()`) untuk menghindari N+1 queries
+- `withCount()` untuk menghitung relasi tanpa loading semua data
+- `select()` untuk hanya mengambil kolom yang diperlukan
+- Pagination di semua halaman index (15-30 per page)
+- `withQueryString()` untuk mempertahankan filter saat pagination
+
+---
+
+*Dokumen ini terakhir diupdate: 8 Maret 2026*
