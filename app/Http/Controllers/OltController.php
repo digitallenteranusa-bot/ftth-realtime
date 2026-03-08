@@ -5,8 +5,10 @@ use App\Models\FiberRoute;
 use App\Models\Olt;
 use App\Models\Ont;
 use App\Models\PonPort;
+use App\Services\Olt\HisoOltDriver;
 use App\Services\Olt\OltServiceFactory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class OltController extends Controller
@@ -208,6 +210,147 @@ class OltController extends Controller
         ]);
 
         return back()->with('success', 'ONT berhasil didaftarkan.');
+    }
+
+    /**
+     * Sync signal (Rx/Tx power) untuk semua ONT di satu OLT
+     */
+    public function syncSignal(Olt $olt)
+    {
+        $driver = OltServiceFactory::make($olt);
+
+        if (!$driver->connect()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke OLT. Periksa host, port, username, dan password.',
+            ], 500);
+        }
+
+        $updated = 0;
+        $errors = [];
+
+        try {
+            $ponPorts = $olt->ponPorts()->where('is_active', true)->with('onts')->get();
+
+            foreach ($ponPorts as $ponPort) {
+                // Try bulk query first (HIOSO supports port-level optical query)
+                if ($driver instanceof HisoOltDriver) {
+                    $allPower = $driver->getAllOpticalPower($ponPort->slot, $ponPort->port);
+
+                    foreach ($ponPort->onts as $ont) {
+                        if ($ont->ont_id_number && isset($allPower[$ont->ont_id_number])) {
+                            $power = $allPower[$ont->ont_id_number];
+                            $ont->update([
+                                'rx_power' => $power['rx_power'] ?? null,
+                                'tx_power' => $power['tx_power'] ?? null,
+                                'status' => 'online',
+                                'last_online_at' => now(),
+                            ]);
+                            $updated++;
+                        }
+                    }
+                }
+
+                // Fallback: query per-ONT
+                foreach ($ponPort->onts as $ont) {
+                    if (!$ont->ont_id_number) continue;
+
+                    // Skip if already updated by bulk query
+                    if ($driver instanceof HisoOltDriver && $ont->wasChanged()) continue;
+
+                    try {
+                        $power = $driver->getOpticalPower($ponPort->slot, $ponPort->port, $ont->ont_id_number);
+
+                        if (!empty($power)) {
+                            $updateData = [];
+                            if (isset($power['rx_power'])) $updateData['rx_power'] = $power['rx_power'];
+                            if (isset($power['tx_power'])) $updateData['tx_power'] = $power['tx_power'];
+
+                            if (!empty($updateData)) {
+                                $updateData['last_online_at'] = now();
+                                $updateData['status'] = 'online';
+                                $ont->update($updateData);
+                                $updated++;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        $errors[] = "ONT {$ont->name} (ID:{$ont->ont_id_number}): {$e->getMessage()}";
+                        Log::warning("Sync signal failed for ONT {$ont->id}", ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+        } finally {
+            $driver->disconnect();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$updated} ONT berhasil disinkronkan.",
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Sync signal untuk satu ONT spesifik
+     */
+    public function syncOntSignal(Olt $olt, Ont $ont)
+    {
+        $driver = OltServiceFactory::make($olt);
+
+        if (!$driver->connect()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke OLT.',
+            ], 500);
+        }
+
+        try {
+            $ponPort = $ont->ponPort;
+            if (!$ponPort) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ONT tidak memiliki PON Port.',
+                ], 400);
+            }
+
+            if (!$ont->ont_id_number) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ONT ID belum diset.',
+                ], 400);
+            }
+
+            $power = $driver->getOpticalPower($ponPort->slot, $ponPort->port, $ont->ont_id_number);
+
+            if (empty($power)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat membaca signal dari ONU. Pastikan ONU online dan mendukung diagnostic.',
+                ]);
+            }
+
+            $updateData = [];
+            if (isset($power['rx_power'])) $updateData['rx_power'] = $power['rx_power'];
+            if (isset($power['tx_power'])) $updateData['tx_power'] = $power['tx_power'];
+            $updateData['last_online_at'] = now();
+            $updateData['status'] = 'online';
+
+            $ont->update($updateData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Signal berhasil disinkronkan.',
+                'data' => [
+                    'rx_power' => $power['rx_power'] ?? null,
+                    'tx_power' => $power['tx_power'] ?? null,
+                    'temperature' => $power['temperature'] ?? null,
+                    'voltage' => $power['voltage'] ?? null,
+                ],
+            ]);
+        } finally {
+            $driver->disconnect();
+        }
     }
 
     public function deregisterOnt(Request $request, Olt $olt)

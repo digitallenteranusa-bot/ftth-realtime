@@ -58,6 +58,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/olts/{olt}/unregistered-onts', [OltController::class, 'unregisteredOnts'])->name('olts.unregistered-onts');
     Route::post('/olts/{olt}/register-ont', [OltController::class, 'registerOnt'])->name('olts.register-ont')->middleware('role:admin,operator');
     Route::post('/olts/{olt}/deregister-ont', [OltController::class, 'deregisterOnt'])->name('olts.deregister-ont')->middleware('role:admin,operator');
+    Route::post('/olts/{olt}/sync-signal', [OltController::class, 'syncSignal'])->name('olts.sync-signal')->middleware('role:admin,operator');
+    Route::post('/olts/{olt}/sync-ont-signal/{ont}', [OltController::class, 'syncOntSignal'])->name('olts.sync-ont-signal')->middleware('role:admin,operator,teknisi');
 
     // PON Ports - operator kelola
     Route::post('/pon-ports', [PonPortController::class, 'store'])->name('pon-ports.store')->middleware('role:admin,operator');

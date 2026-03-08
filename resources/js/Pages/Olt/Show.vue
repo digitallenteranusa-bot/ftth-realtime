@@ -8,6 +8,10 @@ const showAddPort = ref(false);
 const expandedPorts = ref({});
 const portForm = useForm({ olt_id: '', slot: 0, port: 1, description: '', is_active: true });
 
+const syncing = ref(false);
+const syncMessage = ref('');
+const syncSuccess = ref(false);
+
 function togglePort(portId) {
     expandedPorts.value[portId] = !expandedPorts.value[portId];
 }
@@ -28,6 +32,36 @@ function deletePort(portId) {
         router.delete(route('pon-ports.destroy', { id: portId }));
     }
 }
+
+async function syncSignal(oltId) {
+    syncing.value = true;
+    syncMessage.value = '';
+
+    try {
+        const response = await fetch(route('olts.sync-signal', oltId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                'Accept': 'application/json',
+            },
+        });
+        const data = await response.json();
+        syncSuccess.value = data.success;
+        syncMessage.value = data.message;
+
+        if (data.success) {
+            // Reload page to show updated signal data
+            setTimeout(() => router.reload(), 1500);
+        }
+    } catch (e) {
+        syncSuccess.value = false;
+        syncMessage.value = 'Gagal menghubungi server.';
+    } finally {
+        syncing.value = false;
+        setTimeout(() => { syncMessage.value = ''; }, 5000);
+    }
+}
 </script>
 
 <template>
@@ -36,11 +70,32 @@ function deletePort(portId) {
         <template #header>
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ olt.name }}</h2>
-                <Link :href="route('olts.edit', olt.id)" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white">Edit</Link>
+                <div class="flex items-center gap-2">
+                    <button
+                        @click="syncSignal(olt.id)"
+                        :disabled="syncing"
+                        class="rounded-md bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-2"
+                    >
+                        <svg v-if="syncing" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {{ syncing ? 'Syncing...' : 'Sync Signal' }}
+                    </button>
+                    <Link :href="route('olts.edit', olt.id)" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white">Edit</Link>
+                </div>
             </div>
         </template>
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+                <!-- Sync message -->
+                <div v-if="syncMessage" class="rounded-lg p-4 text-sm" :class="syncSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'">
+                    {{ syncMessage }}
+                </div>
+
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg bg-white p-6 shadow">
                     <div><span class="text-xs text-gray-500">Vendor</span><p class="font-semibold uppercase">{{ olt.vendor }}</p></div>
                     <div><span class="text-xs text-gray-500">Host</span><p class="font-semibold">{{ olt.host }}</p></div>
@@ -99,6 +154,7 @@ function deletePort(portId) {
                                             <span>SN: {{ ont.serial_number || '-' }}</span>
                                             <span>ID: {{ ont.ont_id_number ?? '-' }}</span>
                                             <span :class="{ 'text-red-600': ont.rx_power && ont.rx_power < -25, 'text-green-600': ont.rx_power && ont.rx_power >= -25 }">Rx: {{ ont.rx_power ?? '-' }} dBm</span>
+                                            <span>Tx: {{ ont.tx_power ?? '-' }} dBm</span>
                                         </div>
                                     </div>
                                 </div>

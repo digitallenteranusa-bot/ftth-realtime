@@ -11,6 +11,7 @@ class OltServiceFactory
             'zte' => new ZteOltDriver($olt),
             'huawei' => new HuaweiOltDriver($olt),
             'fiberhome' => new FiberHomeOltDriver($olt),
+            'hiso', 'hioso', 'c-data', 'vsol', 'bdcom' => new HisoOltDriver($olt),
             default => new GenericOltDriver($olt),
         };
     }
