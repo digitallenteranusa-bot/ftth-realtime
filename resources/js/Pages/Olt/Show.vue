@@ -5,7 +5,12 @@ import { ref } from 'vue';
 
 defineProps({ olt: Object });
 const showAddPort = ref(false);
+const expandedPorts = ref({});
 const portForm = useForm({ olt_id: '', slot: 0, port: 1, description: '', is_active: true });
+
+function togglePort(portId) {
+    expandedPorts.value[portId] = !expandedPorts.value[portId];
+}
 
 function addPort(oltId) {
     portForm.olt_id = oltId;
@@ -45,16 +50,15 @@ function deletePort(portId) {
                     <div><span class="text-xs text-gray-500">PON Ports</span><p class="font-semibold">{{ olt.pon_ports?.length || 0 }}</p></div>
                 </div>
 
-                <!-- PON Ports Management -->
+                <!-- PON Ports -->
                 <div class="rounded-lg bg-white p-6 shadow">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">PON Ports ({{ olt.pon_ports?.length || 0 }})</h3>
+                        <h3 class="text-lg font-semibold text-gray-800">PON Ports</h3>
                         <button @click="showAddPort = !showAddPort" class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700">
                             {{ showAddPort ? 'Batal' : '+ Tambah PON Port' }}
                         </button>
                     </div>
 
-                    <!-- Add PON Port form -->
                     <div v-if="showAddPort" class="mb-4 p-4 bg-gray-50 rounded-lg border">
                         <div class="grid grid-cols-4 gap-3 items-end">
                             <div><label class="block text-xs font-medium text-gray-600">Slot</label><input v-model="portForm.slot" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
@@ -64,33 +68,43 @@ function deletePort(portId) {
                         </div>
                     </div>
 
-                    <!-- PON Port list -->
-                    <div v-if="olt.pon_ports?.length" class="space-y-3">
-                        <div v-for="ponPort in olt.pon_ports" :key="ponPort.id" class="rounded-lg border p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-semibold text-gray-800">
-                                    {{ ponPort.description || `PON ${ponPort.slot}/${ponPort.port}` }}
-                                    <span class="ml-2 text-xs text-gray-500">Slot {{ ponPort.slot }} / Port {{ ponPort.port }}</span>
-                                    <span class="ml-2 rounded-full px-2 py-0.5 text-xs" :class="ponPort.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ ponPort.is_active ? 'Active' : 'Inactive' }}</span>
-                                    <span class="ml-1 text-xs text-gray-500">({{ ponPort.onts?.length || 0 }} ONTs)</span>
-                                </h4>
-                                <button @click="deletePort(ponPort.id)" class="text-xs text-red-500 hover:underline">Hapus</button>
+                    <div v-if="olt.pon_ports?.length" class="space-y-2">
+                        <div v-for="ponPort in olt.pon_ports" :key="ponPort.id" class="rounded-lg border">
+                            <!-- PON Port header - clickable -->
+                            <div class="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50" @click="togglePort(ponPort.id)">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-gray-400 text-xs">{{ expandedPorts[ponPort.id] ? '▼' : '▶' }}</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ ponPort.description || `PON ${ponPort.slot}/${ponPort.port}` }}</span>
+                                    <span class="rounded-full px-2 py-0.5 text-xs" :class="ponPort.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ ponPort.is_active ? 'Active' : 'Inactive' }}</span>
+                                    <span class="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">{{ ponPort.onts?.length || 0 }} ONT</span>
+                                </div>
+                                <button @click.stop="deletePort(ponPort.id)" class="text-xs text-red-500 hover:underline">Hapus</button>
                             </div>
-                            <div v-if="ponPort.onts?.length" class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                <div v-for="ont in ponPort.onts" :key="ont.id" class="flex items-center gap-3 rounded border p-3"
-                                    :class="{ 'border-green-200 bg-green-50': ont.status === 'online', 'border-red-200 bg-red-50': ont.status === 'offline' || ont.status === 'los', 'border-gray-200': ont.status === 'unknown' }">
-                                    <div class="h-3 w-3 rounded-full" :class="{ 'bg-green-500': ont.status === 'online', 'bg-red-500': ont.status === 'offline' || ont.status === 'los', 'bg-gray-400': ont.status === 'unknown' }"></div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-800">{{ ont.customer?.name || '-' }}</p>
-                                        <Link :href="route('onts.show', ont.id)" class="text-xs text-blue-600 hover:underline">{{ ont.name || ont.serial_number }} <span class="text-gray-400">{{ ont.serial_number ? `(${ont.serial_number})` : '' }}</span></Link>
-                                        <p class="text-xs text-gray-500">ID: {{ ont.ont_id_number ?? '-' }} | Rx: {{ ont.rx_power ?? '-' }} dBm</p>
+
+                            <!-- ONT list - shown on click -->
+                            <div v-if="expandedPorts[ponPort.id]" class="border-t px-4 py-3 bg-gray-50">
+                                <div v-if="ponPort.onts?.length" class="space-y-2">
+                                    <div v-for="ont in ponPort.onts" :key="ont.id" class="flex items-center gap-3 rounded border bg-white p-3"
+                                        :class="{ 'border-green-200': ont.status === 'online', 'border-red-200': ont.status === 'offline' || ont.status === 'los', 'border-gray-200': ont.status === 'unknown' }">
+                                        <div class="h-3 w-3 rounded-full flex-shrink-0" :class="{ 'bg-green-500': ont.status === 'online', 'bg-red-500': ont.status === 'offline' || ont.status === 'los', 'bg-gray-400': ont.status === 'unknown' }"></div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-800">{{ ont.customer?.name || '-' }}</p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span>ONT: {{ ont.name || '-' }}</span>
+                                                <span>SN: {{ ont.serial_number || '-' }}</span>
+                                                <span>ID: {{ ont.ont_id_number ?? '-' }}</span>
+                                                <span :class="{ 'text-red-600': ont.rx_power && ont.rx_power < -25, 'text-green-600': ont.rx_power && ont.rx_power >= -25 }">Rx: {{ ont.rx_power ?? '-' }} dBm</span>
+                                                <span class="rounded-full px-1.5 py-0.5 text-xs" :class="{ 'bg-green-100 text-green-700': ont.status === 'online', 'bg-red-100 text-red-700': ont.status === 'offline' || ont.status === 'los', 'bg-gray-100 text-gray-600': ont.status === 'unknown' }">{{ ont.status }}</span>
+                                            </div>
+                                        </div>
+                                        <Link :href="route('onts.show', ont.id)" class="text-xs text-blue-600 hover:underline flex-shrink-0">Detail</Link>
                                     </div>
                                 </div>
+                                <p v-else class="text-xs text-gray-400">Belum ada ONT di port ini.</p>
                             </div>
-                            <p v-else class="text-xs text-gray-400">Belum ada ONT di port ini.</p>
                         </div>
                     </div>
-                    <p v-else class="text-sm text-gray-500">Belum ada PON Port. Klik "+ Tambah PON Port" atau jalankan: <code class="bg-gray-100 px-1 rounded">php artisan pon:generate</code></p>
+                    <p v-else class="text-sm text-gray-500">Belum ada PON Port.</p>
                 </div>
             </div>
         </div>
