@@ -14,6 +14,7 @@ class Odc extends Model
 
     protected $fillable = [
         'olt_id',
+        'pon_port_id',
         'name',
         'lat',
         'lng',
@@ -37,6 +38,11 @@ class Odc extends Model
     public function olt(): BelongsTo
     {
         return $this->belongsTo(Olt::class);
+    }
+
+    public function ponPort(): BelongsTo
+    {
+        return $this->belongsTo(PonPort::class);
     }
 
     public function odps(): HasMany

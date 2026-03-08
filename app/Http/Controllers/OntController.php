@@ -46,7 +46,7 @@ class OntController extends Controller
 
     public function store(Request $request)
     {
-        $rules = [
+        $validated = $request->validate([
             'odp_id' => 'nullable|exists:odps,id',
             'customer_id' => 'nullable|exists:customers,id',
             'olt_id' => 'nullable|exists:olts,id',
@@ -58,35 +58,7 @@ class OntController extends Controller
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'notes' => 'nullable|string',
-            'customer_mode' => 'nullable|string',
-        ];
-
-        // Validate new customer fields if creating new customer
-        if ($request->customer_mode === 'new') {
-            $rules['customer_name'] = 'required|string|max:255';
-            $rules['customer_phone'] = 'required|string|max:20';
-            $rules['customer_address'] = 'required|string';
-            $rules['customer_bandwidth'] = 'nullable|string|max:20';
-        }
-
-        $validated = $request->validate($rules);
-
-        // Create new customer if mode is 'new'
-        if ($request->customer_mode === 'new') {
-            $customer = Customer::create([
-                'name' => $validated['customer_name'],
-                'phone' => $validated['customer_phone'],
-                'address' => $validated['customer_address'],
-                'bandwidth' => $validated['customer_bandwidth'] ?? null,
-                'lat' => $validated['lat'] ?? null,
-                'lng' => $validated['lng'] ?? null,
-                'status' => 'active',
-            ]);
-            $validated['customer_id'] = $customer->id;
-        }
-
-        // Remove customer form fields before creating ONT
-        unset($validated['customer_mode'], $validated['customer_name'], $validated['customer_phone'], $validated['customer_address'], $validated['customer_bandwidth']);
+        ]);
 
         $ont = Ont::create($validated);
 

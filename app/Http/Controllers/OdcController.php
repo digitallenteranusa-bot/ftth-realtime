@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\FiberRoute;
 use App\Models\Odc;
 use App\Models\Olt;
+use App\Models\PonPort;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,6 +21,7 @@ class OdcController extends Controller
     {
         return Inertia::render('Odc/Create', [
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
+            'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
         ]);
     }
 
@@ -28,6 +30,7 @@ class OdcController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'olt_id' => 'nullable|exists:olts,id',
+            'pon_port_id' => 'nullable|exists:pon_ports,id',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'address' => 'nullable|string|max:255',
@@ -76,6 +79,7 @@ class OdcController extends Controller
         return Inertia::render('Odc/Edit', [
             'odc' => $odc,
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
+            'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
         ]);
     }
 
@@ -84,6 +88,7 @@ class OdcController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'olt_id' => 'nullable|exists:olts,id',
+            'pon_port_id' => 'nullable|exists:pon_ports,id',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'address' => 'nullable|string|max:255',
