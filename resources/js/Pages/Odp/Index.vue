@@ -13,14 +13,16 @@ watch(search, () => applyFilters());
     <Head title="ODP" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">ODP (Optical Distribution Point)</h2>
-                <Link :href="route('odps.create')" class="rounded-md bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700">Add ODP</Link>
+                <Link :href="route('odps.create')" class="rounded-md bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700 text-center">Add ODP</Link>
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, ODC..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, ODC..." class="w-full sm:w-64 rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+
+            <!-- Desktop Table -->
+            <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
@@ -44,6 +46,25 @@ watch(search, () => applyFilters());
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="sm:hidden space-y-3">
+                <div v-for="odp in odps.data" :key="odp.id" class="rounded-lg bg-white p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <Link :href="route('odps.show', odp.id)" class="text-sm font-semibold text-sky-600 hover:underline">{{ odp.name }}</Link>
+                        <span class="text-xs text-gray-400">{{ odp.splitter_ratio || '-' }}</span>
+                    </div>
+                    <div class="space-y-1 text-sm text-gray-500">
+                        <p><span class="font-medium text-gray-700">ODC:</span> {{ odp.odc?.name || '-' }}</p>
+                        <p><span class="font-medium text-gray-700">Capacity:</span> {{ odp.used_ports }}/{{ odp.capacity }}</p>
+                        <p><span class="font-medium text-gray-700">ONTs:</span> {{ odp.onts_count }}</p>
+                    </div>
+                    <div class="mt-3 flex gap-3 border-t pt-3">
+                        <Link :href="route('odps.edit', odp.id)" class="text-sm text-indigo-600 hover:underline">Edit</Link>
+                        <button @click="destroy(odp.id)" class="text-sm text-red-600 hover:underline">Delete</button>
+                    </div>
+                </div>
             </div>
             <div class="mt-4 flex justify-center" v-if="odps.links">
                 <Link v-for="link in odps.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />

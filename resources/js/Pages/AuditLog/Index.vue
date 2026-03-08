@@ -71,32 +71,32 @@ function formatDate(dateStr) {
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <!-- Filters -->
-                <div class="mb-4 flex flex-wrap items-center gap-3">
+                <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
                     <input
                         v-model="search"
                         @input="onSearchInput"
                         type="text"
                         placeholder="Cari user, model, IP..."
-                        class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64"
+                        class="w-full sm:w-64 rounded-md border-gray-300 shadow-sm sm:text-sm"
                     />
-                    <select v-model="action" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    <select v-model="action" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm sm:text-sm">
                         <option value="">Semua Action</option>
                         <option value="created">Created</option>
                         <option value="updated">Updated</option>
                         <option value="deleted">Deleted</option>
                     </select>
-                    <select v-model="modelType" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    <select v-model="modelType" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm sm:text-sm">
                         <option value="">Semua Model</option>
                         <option v-for="mt in modelTypes" :key="mt" :value="mt">{{ shortModelType(mt) }}</option>
                     </select>
-                    <select v-model="userId" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    <select v-model="userId" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm sm:text-sm">
                         <option value="">Semua User</option>
                         <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
                     </select>
                 </div>
 
-                <!-- Table -->
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <!-- Desktop Table -->
+                <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -149,6 +149,38 @@ function formatDate(dateStr) {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Cards -->
+                <div class="sm:hidden space-y-3">
+                    <div v-for="log in logs.data" :key="log.id" @click="toggleRow(log.id)" class="rounded-lg bg-white p-4 shadow cursor-pointer">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-400">{{ formatDate(log.created_at) }}</span>
+                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold uppercase" :class="actionBadgeClass(log.action)">{{ log.action }}</span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-900">{{ log.user?.name || '-' }}</p>
+                        <div class="mt-1 space-y-0.5 text-sm text-gray-500">
+                            <p>{{ shortModelType(log.model_type) }} #{{ log.model_id }}</p>
+                            <p class="font-mono text-xs">{{ log.ip_address || '-' }}</p>
+                        </div>
+                        <!-- Expanded detail -->
+                        <div v-if="expandedRow === log.id" class="mt-3 border-t pt-3">
+                            <div class="space-y-3">
+                                <div v-if="formatJson(log.old_values)">
+                                    <h4 class="text-xs font-semibold uppercase text-gray-500 mb-1">Old Values</h4>
+                                    <pre class="rounded-md bg-red-50 border border-red-200 p-2 text-xs text-red-900 overflow-x-auto max-h-48 overflow-y-auto">{{ formatJson(log.old_values) }}</pre>
+                                </div>
+                                <div v-if="formatJson(log.new_values)">
+                                    <h4 class="text-xs font-semibold uppercase text-gray-500 mb-1">New Values</h4>
+                                    <pre class="rounded-md bg-green-50 border border-green-200 p-2 text-xs text-green-900 overflow-x-auto max-h-48 overflow-y-auto">{{ formatJson(log.new_values) }}</pre>
+                                </div>
+                                <p v-if="!formatJson(log.old_values) && !formatJson(log.new_values)" class="text-sm text-gray-400 italic">Tidak ada detail perubahan.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="logs.data.length === 0" class="rounded-lg bg-white p-6 shadow text-center text-sm text-gray-400">
+                        Tidak ada audit log ditemukan.
+                    </div>
                 </div>
 
                 <!-- Pagination -->

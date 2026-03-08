@@ -30,54 +30,54 @@ onUnmounted(() => { if (refreshInterval) clearInterval(refreshInterval); });
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">Customers</div>
-                        <div class="mt-1 text-2xl font-bold text-gray-900">{{ stats.customers }}</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Customers</div>
+                        <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.customers }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">Mikrotik</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Mikrotik</div>
                         <div class="mt-1 text-2xl font-bold text-blue-600">{{ stats.mikrotiks }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">OLT</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">OLT</div>
                         <div class="mt-1 text-2xl font-bold text-purple-600">{{ stats.olts }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">ODC / ODP</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">ODC / ODP</div>
                         <div class="mt-1 text-2xl font-bold text-indigo-600">{{ stats.odcs }} / {{ stats.odps }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">ONT Online</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">ONT Online</div>
                         <div class="mt-1 text-2xl font-bold text-green-600">{{ stats.onts_online }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">ONT Offline/LOS</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">ONT Offline/LOS</div>
                         <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.onts_offline + stats.onts_los }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">Active PPPoE</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Active PPPoE</div>
                         <div class="mt-1 text-2xl font-bold text-teal-600">{{ stats.active_pppoe }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">Open Tickets</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Open Tickets</div>
                         <div class="mt-1 text-2xl font-bold text-orange-600">{{ stats.open_tickets }}</div>
                     </div>
-                    <div class="rounded-lg bg-white p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500">Unresolved Alarms</div>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Unresolved Alarms</div>
                         <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.unresolved_alarms }}</div>
                     </div>
                 </div>
 
                 <!-- Traffic Charts -->
                 <div v-if="mikrotiks && mikrotiks.length" class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div v-for="mk in mikrotiks" :key="mk.id" class="rounded-lg bg-white p-4 shadow">
+                    <div v-for="mk in mikrotiks" :key="mk.id" class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
                         <TrafficChart :mikrotik-id="mk.id" :mikrotik-name="mk.name" />
                     </div>
                 </div>
 
                 <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div class="rounded-lg bg-white p-6 shadow">
-                        <h3 class="mb-4 text-lg font-semibold text-gray-800">Recent Alarms</h3>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+                        <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white">Recent Alarms</h3>
                         <div v-if="!recentAlarms.length" class="text-sm text-gray-500">No unresolved alarms.</div>
                         <div class="space-y-2">
                             <div v-for="alarm in recentAlarms" :key="alarm.id"
@@ -101,8 +101,8 @@ onUnmounted(() => { if (refreshInterval) clearInterval(refreshInterval); });
                         </div>
                     </div>
 
-                    <div class="rounded-lg bg-white p-6 shadow">
-                        <h3 class="mb-4 text-lg font-semibold text-gray-800">Recent Tickets</h3>
+                    <div class="rounded-lg bg-white dark:bg-gray-800 p-6 shadow">
+                        <h3 class="mb-4 text-lg font-semibold text-gray-800 dark:text-white">Recent Tickets</h3>
                         <div v-if="!recentTickets.length" class="text-sm text-gray-500">No recent tickets.</div>
                         <div class="space-y-2">
                             <div v-for="ticket in recentTickets" :key="ticket.id"

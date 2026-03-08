@@ -19,14 +19,38 @@ function formatPrice(price) {
     <Head title="Bandwidth Plans" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Bandwidth Plans</h2>
-                <Link :href="route('bandwidth-plans.create')" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700">Add Plan</Link>
+                <Link :href="route('bandwidth-plans.create')" class="rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 text-center">Add Plan</Link>
             </div>
         </template>
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <!-- Mobile cards -->
+                <div class="space-y-3 sm:hidden">
+                    <div v-for="plan in bandwidthPlans.data" :key="plan.id" class="rounded-lg bg-white p-4 shadow">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-gray-900">{{ plan.name }}</span>
+                            <span :class="plan.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="rounded-full px-2 py-0.5 text-xs font-semibold">
+                                {{ plan.is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+                        <div class="mt-2 space-y-1 text-sm text-gray-500">
+                            <div class="flex gap-4">
+                                <p>Up: {{ plan.upload_speed }}</p>
+                                <p>Down: {{ plan.download_speed }}</p>
+                            </div>
+                            <p class="font-medium text-gray-700">{{ formatPrice(plan.price) }}</p>
+                        </div>
+                        <div class="mt-3 flex gap-3 text-sm">
+                            <Link :href="route('bandwidth-plans.edit', plan.id)" class="text-indigo-600">Edit</Link>
+                            <button @click="destroy(plan.id)" class="text-red-600">Delete</button>
+                        </div>
+                    </div>
+                    <div v-if="!bandwidthPlans.data.length" class="rounded-lg bg-white p-6 text-center text-sm text-gray-500 shadow">No bandwidth plans found.</div>
+                </div>
+                <!-- Desktop table -->
+                <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>

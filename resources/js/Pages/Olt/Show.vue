@@ -60,7 +60,7 @@ function deletePort(portId) {
                     </div>
 
                     <div v-if="showAddPort" class="mb-4 p-4 bg-gray-50 rounded-lg border">
-                        <div class="grid grid-cols-4 gap-3 items-end">
+                        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 items-end">
                             <div><label class="block text-xs font-medium text-gray-600">Slot</label><input v-model="portForm.slot" type="number" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                             <div><label class="block text-xs font-medium text-gray-600">Port</label><input v-model="portForm.port" type="number" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                             <div><label class="block text-xs font-medium text-gray-600">Keterangan</label><input v-model="portForm.description" type="text" placeholder="PON 1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
@@ -84,20 +84,22 @@ function deletePort(portId) {
                             <!-- ONT list - shown on click -->
                             <div v-if="expandedPorts[ponPort.id]" class="border-t px-4 py-3 bg-gray-50">
                                 <div v-if="ponPort.onts?.length" class="space-y-2">
-                                    <div v-for="ont in ponPort.onts" :key="ont.id" class="flex items-center gap-3 rounded border bg-white p-3"
+                                    <div v-for="ont in ponPort.onts" :key="ont.id" class="rounded border bg-white p-3"
                                         :class="{ 'border-green-200': ont.status === 'online', 'border-red-200': ont.status === 'offline' || ont.status === 'los', 'border-gray-200': ont.status === 'unknown' }">
-                                        <div class="h-3 w-3 rounded-full flex-shrink-0" :class="{ 'bg-green-500': ont.status === 'online', 'bg-red-500': ont.status === 'offline' || ont.status === 'los', 'bg-gray-400': ont.status === 'unknown' }"></div>
-                                        <div class="flex-1">
-                                            <p class="text-sm font-semibold text-gray-800">{{ ont.customer?.name || '-' }}</p>
-                                            <div class="flex items-center gap-4 text-xs text-gray-500">
-                                                <span>ONT: {{ ont.name || '-' }}</span>
-                                                <span>SN: {{ ont.serial_number || '-' }}</span>
-                                                <span>ID: {{ ont.ont_id_number ?? '-' }}</span>
-                                                <span :class="{ 'text-red-600': ont.rx_power && ont.rx_power < -25, 'text-green-600': ont.rx_power && ont.rx_power >= -25 }">Rx: {{ ont.rx_power ?? '-' }} dBm</span>
-                                                <span class="rounded-full px-1.5 py-0.5 text-xs" :class="{ 'bg-green-100 text-green-700': ont.status === 'online', 'bg-red-100 text-red-700': ont.status === 'offline' || ont.status === 'los', 'bg-gray-100 text-gray-600': ont.status === 'unknown' }">{{ ont.status }}</span>
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-3 w-3 rounded-full flex-shrink-0" :class="{ 'bg-green-500': ont.status === 'online', 'bg-red-500': ont.status === 'offline' || ont.status === 'los', 'bg-gray-400': ont.status === 'unknown' }"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-800 truncate">{{ ont.customer?.name || '-' }}</p>
                                             </div>
+                                            <span class="rounded-full px-1.5 py-0.5 text-xs flex-shrink-0" :class="{ 'bg-green-100 text-green-700': ont.status === 'online', 'bg-red-100 text-red-700': ont.status === 'offline' || ont.status === 'los', 'bg-gray-100 text-gray-600': ont.status === 'unknown' }">{{ ont.status }}</span>
+                                            <Link :href="route('onts.show', ont.id)" class="text-xs text-blue-600 hover:underline flex-shrink-0">Detail</Link>
                                         </div>
-                                        <Link :href="route('onts.show', ont.id)" class="text-xs text-blue-600 hover:underline flex-shrink-0">Detail</Link>
+                                        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 pl-6">
+                                            <span>ONT: {{ ont.name || '-' }}</span>
+                                            <span>SN: {{ ont.serial_number || '-' }}</span>
+                                            <span>ID: {{ ont.ont_id_number ?? '-' }}</span>
+                                            <span :class="{ 'text-red-600': ont.rx_power && ont.rx_power < -25, 'text-green-600': ont.rx_power && ont.rx_power >= -25 }">Rx: {{ ont.rx_power ?? '-' }} dBm</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <p v-else class="text-xs text-gray-400">Belum ada ONT di port ini.</p>

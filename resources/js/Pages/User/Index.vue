@@ -21,14 +21,16 @@ function roleBadgeClass(role) {
     <Head title="Users" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Users</h2>
-                <Link :href="route('users.create')" class="rounded-md bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">Add User</Link>
+                <Link :href="route('users.create')" class="rounded-md bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 text-center">Add User</Link>
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, email..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" /></div>
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="mb-4"><input v-model="search" type="text" placeholder="Search name, email..." class="w-full sm:w-64 rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+
+            <!-- Desktop Table -->
+            <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
@@ -48,6 +50,21 @@ function roleBadgeClass(role) {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="sm:hidden space-y-3">
+                <div v-for="u in users.data" :key="u.id" class="rounded-lg bg-white p-4 shadow">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-900">{{ u.name }}</span>
+                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="roleBadgeClass(u.role)">{{ u.role }}</span>
+                    </div>
+                    <p class="text-sm text-gray-500">{{ u.email }}</p>
+                    <div class="mt-3 flex gap-3 border-t pt-3">
+                        <Link :href="route('users.edit', u.id)" class="text-sm text-indigo-600 hover:underline">Edit</Link>
+                        <button @click="destroy(u.id)" class="text-sm text-red-600 hover:underline">Delete</button>
+                    </div>
+                </div>
             </div>
             <div class="mt-4 flex justify-center" v-if="users.links">
                 <Link v-for="link in users.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />

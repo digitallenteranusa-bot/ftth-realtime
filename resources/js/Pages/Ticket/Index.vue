@@ -13,14 +13,14 @@ watch(status, () => applyFilters());
     <Head title="Trouble Tickets" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Trouble Tickets</h2>
-                <Link :href="route('tickets.create')" class="rounded-md bg-orange-600 px-4 py-2 text-sm text-white hover:bg-orange-700">Create Ticket</Link>
+                <Link :href="route('tickets.create')" class="rounded-md bg-orange-600 px-4 py-2 text-sm text-white hover:bg-orange-700 text-center">Create Ticket</Link>
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mb-4">
-                <select v-model="status" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+                <select v-model="status" class="rounded-md border-gray-300 shadow-sm sm:text-sm w-full sm:w-auto">
                     <option value="">All Status</option>
                     <option value="open">Open</option>
                     <option value="in_progress">In Progress</option>
@@ -28,7 +28,29 @@ watch(status, () => applyFilters());
                     <option value="closed">Closed</option>
                 </select>
             </div>
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <!-- Mobile cards -->
+            <div class="space-y-3 sm:hidden">
+                <div v-for="t in tickets.data" :key="t.id" class="rounded-lg bg-white p-4 shadow">
+                    <div class="flex items-center justify-between">
+                        <Link :href="route('tickets.show', t.id)" class="text-sm font-semibold text-orange-600">{{ t.ticket_number }}</Link>
+                        <div class="flex gap-1">
+                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="{ 'bg-red-100 text-red-800': t.priority === 'urgent', 'bg-orange-100 text-orange-800': t.priority === 'high', 'bg-yellow-100 text-yellow-800': t.priority === 'medium', 'bg-gray-100 text-gray-800': t.priority === 'low' }">{{ t.priority }}</span>
+                            <span class="rounded-full px-2 py-0.5 text-xs font-semibold" :class="{ 'bg-blue-100 text-blue-800': t.status === 'open', 'bg-yellow-100 text-yellow-800': t.status === 'in_progress', 'bg-green-100 text-green-800': t.status === 'resolved', 'bg-gray-100 text-gray-800': t.status === 'closed' }">{{ t.status }}</span>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm font-medium text-gray-900">{{ t.title }}</p>
+                    <div class="mt-2 space-y-1 text-sm text-gray-500">
+                        <p>Customer: {{ t.customer?.name || '-' }}</p>
+                        <p>Assigned: {{ t.assigned_user?.name || '-' }}</p>
+                    </div>
+                    <div class="mt-3 flex gap-3 text-sm">
+                        <Link :href="route('tickets.show', t.id)" class="text-indigo-600">View</Link>
+                        <button @click="destroy(t.id)" class="text-red-600">Delete</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Desktop table -->
+            <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Ticket #</th>

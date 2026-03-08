@@ -135,7 +135,7 @@ const { isDark, toggle: toggleDark } = useDarkMode();
 
             <!-- Page Heading -->
             <header class="bg-white dark:bg-gray-800 shadow dark:shadow-gray-700/50 transition-colors duration-200" v-if="$slots.header">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-7xl px-4 py-4 sm:py-6 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>

@@ -19,7 +19,7 @@ watch([search, status], () => applyFilters());
     <Head title="ONT" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">ONT Devices</h2>
                 <div class="flex items-center space-x-2">
                     <a :href="route('export.onts.csv')" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">CSV</a>
@@ -29,9 +29,9 @@ watch([search, status], () => applyFilters());
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-4 flex gap-4">
-                <input v-model="search" type="text" placeholder="Search by name, SN, customer..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-64" />
-                <select v-model="status" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <input v-model="search" type="text" placeholder="Search by name, SN, customer..." class="rounded-md border-gray-300 shadow-sm sm:text-sm w-full sm:w-64" />
+                <select v-model="status" class="rounded-md border-gray-300 shadow-sm sm:text-sm w-full sm:w-auto">
                     <option value="">All Status</option>
                     <option value="online">Online</option>
                     <option value="offline">Offline</option>
@@ -40,7 +40,30 @@ watch([search, status], () => applyFilters());
                     <option value="unknown">Unknown</option>
                 </select>
             </div>
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <!-- Mobile cards -->
+            <div class="space-y-3 sm:hidden">
+                <div v-for="ont in onts.data" :key="ont.id" class="rounded-lg bg-white p-4 shadow">
+                    <div class="flex items-center justify-between">
+                        <Link :href="route('onts.show', ont.id)" class="text-sm font-semibold text-blue-600">{{ ont.name || ont.serial_number }}</Link>
+                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                            :class="{ 'bg-green-100 text-green-800': ont.status === 'online', 'bg-red-100 text-red-800': ont.status === 'offline' || ont.status === 'los', 'bg-yellow-100 text-yellow-800': ont.status === 'dyinggasp', 'bg-gray-100 text-gray-800': ont.status === 'unknown' }">
+                            {{ ont.status }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ ont.serial_number }}</p>
+                    <div class="mt-2 grid grid-cols-2 gap-1 text-sm text-gray-500">
+                        <p>Customer: {{ ont.customer?.name || '-' }}</p>
+                        <p>ODP: {{ ont.odp?.name || '-' }}</p>
+                        <p :class="{ 'text-red-600': ont.rx_power && ont.rx_power < -25, 'text-green-600': ont.rx_power && ont.rx_power >= -25 }">Rx: {{ ont.rx_power ? ont.rx_power + ' dBm' : '-' }}</p>
+                    </div>
+                    <div class="mt-3 flex gap-3 text-sm">
+                        <Link :href="route('onts.edit', ont.id)" class="text-indigo-600">Edit</Link>
+                        <button @click="destroy(ont.id)" class="text-red-600">Delete</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Desktop table -->
+            <div class="hidden sm:block overflow-hidden rounded-lg bg-white shadow">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50"><tr>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Name / SN</th>
@@ -72,7 +95,7 @@ watch([search, status], () => applyFilters());
                         </tr>
                     </tbody>
                 </table>
-            </div>
+            </div><!-- end desktop table -->
             <div class="mt-4 flex justify-center" v-if="onts.links">
                 <Link v-for="link in onts.links" :key="link.label" :href="link.url || '#'"
                     class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />

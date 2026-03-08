@@ -15,14 +15,14 @@ watch([severity, unresolved], () => applyFilters());
     <Head title="Alarms" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">Alarms</h2>
-                <a :href="route('export.alarms.csv')" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">Export CSV</a>
+                <a :href="route('export.alarms.csv')" class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-center">Export CSV</a>
             </div>
         </template>
         <div class="py-6"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mb-4 flex gap-4">
-                <select v-model="severity" class="rounded-md border-gray-300 shadow-sm sm:text-sm">
+            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
+                <select v-model="severity" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm sm:text-sm">
                     <option value="">All Severity</option>
                     <option value="critical">Critical</option>
                     <option value="major">Major</option>
@@ -34,7 +34,7 @@ watch([severity, unresolved], () => applyFilters());
             </div>
             <div class="space-y-2">
                 <div v-for="alarm in alarms.data" :key="alarm.id"
-                    class="flex items-center justify-between rounded-lg bg-white p-4 shadow"
+                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-white p-4 shadow"
                     :class="{ 'border-l-4 border-red-500': alarm.severity === 'critical', 'border-l-4 border-orange-500': alarm.severity === 'major', 'border-l-4 border-yellow-500': alarm.severity === 'warning', 'border-l-4 border-blue-500': alarm.severity === 'info' }">
                     <div>
                         <div class="flex items-center gap-2">
