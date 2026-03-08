@@ -65,7 +65,7 @@ class OltController extends Controller
     public function show(Olt $olt)
     {
         return Inertia::render('Olt/Show', [
-            'olt' => $olt->load('ponPorts.onts'),
+            'olt' => $olt->load('ponPorts.onts.customer'),
         ]);
     }
 

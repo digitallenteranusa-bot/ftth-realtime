@@ -41,6 +41,8 @@ function deletePort(portId) {
                     <div><span class="text-xs text-gray-500">Host</span><p class="font-semibold">{{ olt.host }}</p></div>
                     <div><span class="text-xs text-gray-500">Location</span><p class="font-semibold">{{ olt.location || '-' }}</p></div>
                     <div><span class="text-xs text-gray-500">Status</span><p :class="olt.is_active ? 'text-green-600' : 'text-red-600'" class="font-semibold">{{ olt.is_active ? 'Active' : 'Inactive' }}</p></div>
+                    <div><span class="text-xs text-gray-500">Total ONT</span><p class="font-semibold">{{ olt.pon_ports?.reduce((sum, p) => sum + (p.onts?.length || 0), 0) || 0 }}</p></div>
+                    <div><span class="text-xs text-gray-500">PON Ports</span><p class="font-semibold">{{ olt.pon_ports?.length || 0 }}</p></div>
                 </div>
 
                 <!-- PON Ports Management -->
@@ -79,8 +81,9 @@ function deletePort(portId) {
                                     :class="{ 'border-green-200 bg-green-50': ont.status === 'online', 'border-red-200 bg-red-50': ont.status === 'offline' || ont.status === 'los', 'border-gray-200': ont.status === 'unknown' }">
                                     <div class="h-3 w-3 rounded-full" :class="{ 'bg-green-500': ont.status === 'online', 'bg-red-500': ont.status === 'offline' || ont.status === 'los', 'bg-gray-400': ont.status === 'unknown' }"></div>
                                     <div>
-                                        <Link :href="route('onts.show', ont.id)" class="text-sm font-medium text-blue-600 hover:underline">{{ ont.name || ont.serial_number }}</Link>
-                                        <p class="text-xs text-gray-500">ID: {{ ont.ont_id_number }} | Rx: {{ ont.rx_power ?? '-' }} dBm</p>
+                                        <p class="text-sm font-semibold text-gray-800">{{ ont.customer?.name || '-' }}</p>
+                                        <Link :href="route('onts.show', ont.id)" class="text-xs text-blue-600 hover:underline">{{ ont.name || ont.serial_number }} <span class="text-gray-400">{{ ont.serial_number ? `(${ont.serial_number})` : '' }}</span></Link>
+                                        <p class="text-xs text-gray-500">ID: {{ ont.ont_id_number ?? '-' }} | Rx: {{ ont.rx_power ?? '-' }} dBm</p>
                                     </div>
                                 </div>
                             </div>
