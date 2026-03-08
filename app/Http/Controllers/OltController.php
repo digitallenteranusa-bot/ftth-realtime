@@ -220,14 +220,16 @@ class OltController extends Controller
         $driver = OltServiceFactory::make($olt);
         $result = ['telnet' => false, 'snmp' => false];
 
-        $connected = $driver->connect();
-        $result['telnet'] = $connected;
+        $driver->connect();
 
         if ($driver instanceof HisoOltDriver) {
+            $result['telnet'] = $driver->isTelnetConnected();
+
             $snmpTest = $driver->testSnmpConnection();
             $result['snmp'] = $snmpTest['connected'];
             $result['snmp_info'] = $snmpTest['sys_descr'] ?? ($snmpTest['reason'] ?? null);
-            $result['has_snmp'] = $driver->hasSnmp();
+        } else {
+            $result['telnet'] = true; // Other drivers use SSH, report as telnet for simplicity
         }
 
         $driver->disconnect();
@@ -243,6 +245,83 @@ class OltController extends Controller
                 : 'Tidak dapat terhubung ke OLT.',
             'connections' => $result,
         ]);
+    }
+
+    /**
+     * Discover ONUs via SNMP dan auto-assign ONT ID ke database
+     */
+    public function discoverOnus(Olt $olt)
+    {
+        $driver = OltServiceFactory::make($olt);
+
+        if (!$driver->connect()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke OLT.',
+            ], 500);
+        }
+
+        try {
+            if (!($driver instanceof HisoOltDriver) || !$driver->hasSnmp()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Fitur discover hanya tersedia untuk OLT HIOSO dengan SNMP aktif.',
+                ]);
+            }
+
+            $discoveredOnus = $driver->discoverOnuSnmp();
+
+            if (empty($discoveredOnus)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ditemukan ONU di OLT. Pastikan SNMP bisa membaca interface EPON.',
+                    'raw_debug' => $driver->snmpWalkRaw('1.3.6.1.2.1.2.2.1.2'),
+                ]);
+            }
+
+            // Auto-assign ONT IDs to existing ONTs that don't have one
+            $updated = 0;
+            $ponPorts = $olt->ponPorts()->with('onts')->get()->keyBy(function ($pp) {
+                return "{$pp->slot}/{$pp->port}";
+            });
+
+            foreach ($discoveredOnus as $onu) {
+                $key = "{$onu['slot']}/{$onu['port']}";
+                $ponPort = $ponPorts->get($key);
+
+                if ($ponPort) {
+                    // Find ONTs without ONT ID in this port, assign sequentially
+                    $ontsWithoutId = $ponPort->onts->whereNull('ont_id_number')->values();
+
+                    // Check if this ONU ID is already assigned
+                    $alreadyAssigned = $ponPort->onts->where('ont_id_number', $onu['onu_id'])->first();
+                    if ($alreadyAssigned) {
+                        // Update status
+                        $alreadyAssigned->update(['status' => $onu['status']]);
+                        continue;
+                    }
+
+                    // Assign to first ONT without ID
+                    if ($ontsWithoutId->isNotEmpty()) {
+                        $ont = $ontsWithoutId->shift();
+                        $ont->update([
+                            'ont_id_number' => $onu['onu_id'],
+                            'status' => $onu['status'],
+                        ]);
+                        $updated++;
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Ditemukan " . count($discoveredOnus) . " ONU. {$updated} ONT berhasil di-update ID-nya.",
+                'discovered' => $discoveredOnus,
+                'updated' => $updated,
+            ]);
+        } finally {
+            $driver->disconnect();
+        }
     }
 
     /**

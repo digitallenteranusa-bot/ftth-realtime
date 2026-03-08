@@ -47,8 +47,10 @@ class HisoOltDriver implements OltDriverInterface
         // Try SNMP first (faster, non-interactive)
         $this->initSnmp();
 
-        // Then try Telnet
-        return $this->connectTelnet();
+        // Then try Telnet (don't fail if telnet fails but SNMP works)
+        $this->connectTelnet();
+
+        return $this->telnetConnected || $this->snmp !== null;
     }
 
     protected function initSnmp(): void
@@ -70,18 +72,18 @@ class HisoOltDriver implements OltDriverInterface
         );
 
         if (!$this->snmp->testConnection()) {
-            Log::info("SNMP connection failed for OLT {$this->olt->name}, will use Telnet only");
+            Log::info("SNMP connection failed for OLT {$this->olt->name}");
             $this->snmp = null;
         }
     }
 
-    protected function connectTelnet(): bool
+    protected function connectTelnet(): void
     {
         try {
             $this->telnet = new TelnetConnection(
                 $this->olt->host,
                 $this->olt->telnet_port ?: 23,
-                15
+                10
             );
 
             $this->telnetConnected = $this->telnet->connect(
@@ -89,13 +91,15 @@ class HisoOltDriver implements OltDriverInterface
                 $this->olt->password,
                 '#'
             );
-
-            return $this->telnetConnected || $this->snmp !== null;
         } catch (\Throwable $e) {
-            report($e);
-            // If SNMP is available, we can still work
-            return $this->snmp !== null;
+            Log::info("Telnet connection failed for OLT {$this->olt->name}: {$e->getMessage()}");
+            $this->telnetConnected = false;
         }
+    }
+
+    public function isTelnetConnected(): bool
+    {
+        return $this->telnetConnected;
     }
 
     public function disconnect(): void
@@ -342,18 +346,87 @@ class HisoOltDriver implements OltDriverInterface
         return round($numValue, 2);
     }
 
+    /**
+     * Discover all ONUs via SNMP walk on ifDescr
+     * Returns array of discovered ONUs with their interface info
+     */
+    public function discoverOnuSnmp(): array
+    {
+        if (!$this->snmp) return [];
+
+        $onus = [];
+
+        // Walk ifDescr to find EPON ONU interfaces
+        $ifDescrs = $this->snmp->walk(self::OID_IF_DESCR);
+        $ifOpers = $this->snmp->walk(self::OID_IF_OPER);
+
+        foreach ($ifDescrs as $ifIndex => $descr) {
+            // Match EPON ONU interface names like "EPON0/0/1:1", "epon0/1:2", "EPON 0/0/1:3"
+            if (preg_match('/[Ee][Pp][Oo][Nn]\s*(\d+)\/(?:(\d+)\/)?(\d+):(\d+)/', $descr, $m)) {
+                $slot = isset($m[2]) && $m[2] !== '' ? (int)$m[2] : (int)$m[1];
+                $port = (int)$m[3];
+                $onuId = (int)$m[4];
+
+                // If format is epon0/1:1 (no middle number), slot=0, port=1
+                if (!isset($m[2]) || $m[2] === '') {
+                    $slot = 0;
+                    $port = (int)$m[3];
+                }
+
+                $status = isset($ifOpers[$ifIndex]) ? ((int)$ifOpers[$ifIndex] === 1 ? 'online' : 'offline') : 'unknown';
+
+                $onus[] = [
+                    'if_index' => (int)$ifIndex,
+                    'if_descr' => $descr,
+                    'slot' => $slot,
+                    'port' => $port,
+                    'onu_id' => $onuId,
+                    'status' => $status,
+                ];
+            }
+        }
+
+        return $onus;
+    }
+
+    /**
+     * SNMP walk raw - for debugging/discovery
+     */
+    public function snmpWalkRaw(string $oid): array
+    {
+        if (!$this->snmp) return [];
+        return $this->snmp->walk($oid);
+    }
+
     // ─────────────────────────────────────────
     // Main Interface Methods (SNMP → Telnet fallback)
     // ─────────────────────────────────────────
 
     /**
-     * Get all ONUs on a specific EPON port
+     * Get all ONUs on a specific EPON port - SNMP first, Telnet fallback
      */
     public function getOntList(int $slot, int $port): array
     {
-        // ONU list is best retrieved via Telnet (more detailed info)
-        $output = $this->execute("show epon onu-information interface epon 0/{$slot}/{$port}");
-        return $this->parseOnuList($output);
+        // Try SNMP discovery first
+        if ($this->snmp) {
+            $allOnus = $this->discoverOnuSnmp();
+            $filtered = array_filter($allOnus, fn($o) => $o['slot'] === $slot && $o['port'] === $port);
+            if (!empty($filtered)) {
+                return array_values(array_map(fn($o) => [
+                    'ont_id' => $o['onu_id'],
+                    'status' => $o['status'],
+                    'if_index' => $o['if_index'],
+                ], $filtered));
+            }
+        }
+
+        // Fallback to Telnet
+        if ($this->telnetConnected) {
+            $output = $this->execute("show epon onu-information interface epon 0/{$slot}/{$port}");
+            return $this->parseOnuList($output);
+        }
+
+        return [];
     }
 
     /**

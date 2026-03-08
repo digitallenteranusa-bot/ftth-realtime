@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/olts/{olt}/deregister-ont', [OltController::class, 'deregisterOnt'])->name('olts.deregister-ont')->middleware('role:admin,operator');
     Route::post('/olts/{olt}/sync-signal', [OltController::class, 'syncSignal'])->name('olts.sync-signal')->middleware('role:admin,operator');
     Route::get('/olts/{olt}/test-connection', [OltController::class, 'testConnection'])->name('olts.test-connection')->middleware('role:admin,operator');
+    Route::post('/olts/{olt}/discover-onus', [OltController::class, 'discoverOnus'])->name('olts.discover-onus')->middleware('role:admin,operator');
     Route::post('/olts/{olt}/sync-ont-signal/{ont}', [OltController::class, 'syncOntSignal'])->name('olts.sync-ont-signal')->middleware('role:admin,operator,teknisi');
 
     // PON Ports - operator kelola

@@ -16,6 +16,11 @@ const syncMethod = ref('');
 const connStatus = ref(null);
 const testingConn = ref(false);
 
+const discovering = ref(false);
+const discoverMessage = ref('');
+const discoverSuccess = ref(false);
+const discoveredOnus = ref([]);
+
 function togglePort(portId) {
     expandedPorts.value[portId] = !expandedPorts.value[portId];
 }
@@ -82,6 +87,36 @@ async function syncSignal(oltId) {
     }
 }
 
+async function discoverOnus(oltId) {
+    discovering.value = true;
+    discoverMessage.value = '';
+    discoveredOnus.value = [];
+
+    try {
+        const response = await fetch(route('olts.discover-onus', oltId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                'Accept': 'application/json',
+            },
+        });
+        const data = await response.json();
+        discoverSuccess.value = data.success;
+        discoverMessage.value = data.message;
+        discoveredOnus.value = data.discovered || [];
+
+        if (data.success && data.updated > 0) {
+            setTimeout(() => router.reload(), 2000);
+        }
+    } catch (e) {
+        discoverSuccess.value = false;
+        discoverMessage.value = 'Gagal menghubungi server.';
+    } finally {
+        discovering.value = false;
+    }
+}
+
 onMounted(() => {
     testConnection(props.olt.id);
 });
@@ -94,6 +129,20 @@ onMounted(() => {
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">{{ olt.name }}</h2>
                 <div class="flex items-center gap-2">
+                    <button
+                        @click="discoverOnus(olt.id)"
+                        :disabled="discovering"
+                        class="rounded-md bg-amber-600 px-4 py-2 text-sm text-white hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2"
+                    >
+                        <svg v-if="discovering" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        {{ discovering ? 'Discovering...' : 'Discover ONU' }}
+                    </button>
                     <button
                         @click="syncSignal(olt.id)"
                         :disabled="syncing"
@@ -118,6 +167,19 @@ onMounted(() => {
                 <div v-if="syncMessage" class="rounded-lg p-4 text-sm" :class="syncSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'">
                     {{ syncMessage }}
                     <span v-if="syncMethod" class="ml-2 rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">{{ syncMethod }}</span>
+                </div>
+
+                <!-- Discover results -->
+                <div v-if="discoverMessage" class="rounded-lg p-4 text-sm border" :class="discoverSuccess ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-red-50 text-red-800 border-red-200'">
+                    <p class="font-medium">{{ discoverMessage }}</p>
+                    <div v-if="discoveredOnus.length" class="mt-3 space-y-1">
+                        <p class="text-xs font-semibold text-gray-600">ONU ditemukan via SNMP:</p>
+                        <div v-for="onu in discoveredOnus" :key="onu.if_index" class="flex items-center gap-3 text-xs bg-white rounded px-3 py-1.5 border">
+                            <span class="font-mono font-semibold">{{ onu.if_descr }}</span>
+                            <span class="rounded-full px-2 py-0.5" :class="onu.status === 'online' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ onu.status }}</span>
+                            <span class="text-gray-400">Port: {{ onu.slot }}/{{ onu.port }} | ONU ID: {{ onu.onu_id }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Connection Status -->
