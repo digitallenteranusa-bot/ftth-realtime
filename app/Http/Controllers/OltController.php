@@ -213,7 +213,41 @@ class OltController extends Controller
     }
 
     /**
+     * Test koneksi ke OLT (Telnet + SNMP)
+     */
+    public function testConnection(Olt $olt)
+    {
+        $driver = OltServiceFactory::make($olt);
+        $result = ['telnet' => false, 'snmp' => false];
+
+        $connected = $driver->connect();
+        $result['telnet'] = $connected;
+
+        if ($driver instanceof HisoOltDriver) {
+            $snmpTest = $driver->testSnmpConnection();
+            $result['snmp'] = $snmpTest['connected'];
+            $result['snmp_info'] = $snmpTest['sys_descr'] ?? ($snmpTest['reason'] ?? null);
+            $result['has_snmp'] = $driver->hasSnmp();
+        }
+
+        $driver->disconnect();
+
+        $methods = [];
+        if ($result['telnet']) $methods[] = 'Telnet';
+        if ($result['snmp']) $methods[] = 'SNMP';
+
+        return response()->json([
+            'success' => !empty($methods),
+            'message' => !empty($methods)
+                ? 'Terhubung via ' . implode(' + ', $methods)
+                : 'Tidak dapat terhubung ke OLT.',
+            'connections' => $result,
+        ]);
+    }
+
+    /**
      * Sync signal (Rx/Tx power) untuk semua ONT di satu OLT
+     * Otomatis menggunakan SNMP jika tersedia, fallback ke Telnet
      */
     public function syncSignal(Olt $olt)
     {
@@ -228,12 +262,13 @@ class OltController extends Controller
 
         $updated = 0;
         $errors = [];
+        $method = ($driver instanceof HisoOltDriver && $driver->hasSnmp()) ? 'SNMP' : 'Telnet';
 
         try {
             $ponPorts = $olt->ponPorts()->where('is_active', true)->with('onts')->get();
 
             foreach ($ponPorts as $ponPort) {
-                // Try bulk query first (HIOSO supports port-level optical query)
+                // Try bulk query first (SNMP walk or Telnet bulk command)
                 if ($driver instanceof HisoOltDriver) {
                     $allPower = $driver->getAllOpticalPower($ponPort->slot, $ponPort->port);
 
@@ -251,11 +286,9 @@ class OltController extends Controller
                     }
                 }
 
-                // Fallback: query per-ONT
+                // Fallback: query per-ONT for those not updated by bulk
                 foreach ($ponPort->onts as $ont) {
                     if (!$ont->ont_id_number) continue;
-
-                    // Skip if already updated by bulk query
                     if ($driver instanceof HisoOltDriver && $ont->wasChanged()) continue;
 
                     try {
@@ -285,8 +318,9 @@ class OltController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "{$updated} ONT berhasil disinkronkan.",
+            'message' => "{$updated} ONT berhasil disinkronkan via {$method}.",
             'updated' => $updated,
+            'method' => $method,
             'errors' => $errors,
         ]);
     }
@@ -321,6 +355,7 @@ class OltController extends Controller
                 ], 400);
             }
 
+            $method = ($driver instanceof HisoOltDriver && $driver->hasSnmp()) ? 'SNMP' : 'Telnet';
             $power = $driver->getOpticalPower($ponPort->slot, $ponPort->port, $ont->ont_id_number);
 
             if (empty($power)) {
@@ -340,7 +375,8 @@ class OltController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Signal berhasil disinkronkan.',
+                'message' => "Signal berhasil disinkronkan via {$method}.",
+                'method' => $method,
                 'data' => [
                     'rx_power' => $power['rx_power'] ?? null,
                     'tx_power' => $power['tx_power'] ?? null,

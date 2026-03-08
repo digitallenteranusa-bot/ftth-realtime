@@ -8,6 +8,7 @@ const props = defineProps({ ont: Object });
 const syncing = ref(false);
 const syncMessage = ref('');
 const syncSuccess = ref(false);
+const syncMethod = ref('');
 const signalData = ref(null);
 
 const rxPower = computed(() => signalData.value?.rx_power ?? props.ont.rx_power);
@@ -35,6 +36,7 @@ async function refreshSignal() {
         const data = await response.json();
         syncSuccess.value = data.success;
         syncMessage.value = data.message;
+        syncMethod.value = data.method || '';
 
         if (data.success && data.data) {
             signalData.value = data.data;
@@ -79,6 +81,7 @@ async function refreshSignal() {
             <!-- Sync message -->
             <div v-if="syncMessage" class="rounded-lg p-4 text-sm" :class="syncSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'">
                 {{ syncMessage }}
+                <span v-if="syncMethod" class="ml-2 rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">via {{ syncMethod }}</span>
                 <div v-if="syncSuccess && signalData" class="mt-2 flex gap-6 font-semibold">
                     <span :class="signalData.rx_power < -25 ? 'text-red-600' : 'text-green-700'">Rx: {{ signalData.rx_power }} dBm</span>
                     <span>Tx: {{ signalData.tx_power }} dBm</span>

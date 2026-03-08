@@ -1,9 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
-defineProps({ olt: Object });
+const props = defineProps({ olt: Object });
 const showAddPort = ref(false);
 const expandedPorts = ref({});
 const portForm = useForm({ olt_id: '', slot: 0, port: 1, description: '', is_active: true });
@@ -11,6 +11,10 @@ const portForm = useForm({ olt_id: '', slot: 0, port: 1, description: '', is_act
 const syncing = ref(false);
 const syncMessage = ref('');
 const syncSuccess = ref(false);
+const syncMethod = ref('');
+
+const connStatus = ref(null);
+const testingConn = ref(false);
 
 function togglePort(portId) {
     expandedPorts.value[portId] = !expandedPorts.value[portId];
@@ -33,9 +37,24 @@ function deletePort(portId) {
     }
 }
 
+async function testConnection(oltId) {
+    testingConn.value = true;
+    try {
+        const response = await fetch(route('olts.test-connection', oltId), {
+            headers: { 'Accept': 'application/json' },
+        });
+        connStatus.value = await response.json();
+    } catch (e) {
+        connStatus.value = { success: false, message: 'Gagal menghubungi server.' };
+    } finally {
+        testingConn.value = false;
+    }
+}
+
 async function syncSignal(oltId) {
     syncing.value = true;
     syncMessage.value = '';
+    syncMethod.value = '';
 
     try {
         const response = await fetch(route('olts.sync-signal', oltId), {
@@ -49,9 +68,9 @@ async function syncSignal(oltId) {
         const data = await response.json();
         syncSuccess.value = data.success;
         syncMessage.value = data.message;
+        syncMethod.value = data.method || '';
 
         if (data.success) {
-            // Reload page to show updated signal data
             setTimeout(() => router.reload(), 1500);
         }
     } catch (e) {
@@ -59,9 +78,13 @@ async function syncSignal(oltId) {
         syncMessage.value = 'Gagal menghubungi server.';
     } finally {
         syncing.value = false;
-        setTimeout(() => { syncMessage.value = ''; }, 5000);
+        setTimeout(() => { syncMessage.value = ''; }, 8000);
     }
 }
+
+onMounted(() => {
+    testConnection(props.olt.id);
+});
 </script>
 
 <template>
@@ -94,6 +117,33 @@ async function syncSignal(oltId) {
                 <!-- Sync message -->
                 <div v-if="syncMessage" class="rounded-lg p-4 text-sm" :class="syncSuccess ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'">
                     {{ syncMessage }}
+                    <span v-if="syncMethod" class="ml-2 rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-medium">{{ syncMethod }}</span>
+                </div>
+
+                <!-- Connection Status -->
+                <div v-if="connStatus" class="rounded-lg p-4 text-sm border" :class="connStatus.success ? 'bg-emerald-50 border-emerald-200' : 'bg-yellow-50 border-yellow-200'">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="font-medium" :class="connStatus.success ? 'text-emerald-800' : 'text-yellow-800'">{{ connStatus.message }}</span>
+                            <div v-if="connStatus.connections" class="flex gap-2">
+                                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="connStatus.connections.telnet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                                    Telnet {{ connStatus.connections.telnet ? 'OK' : 'Fail' }}
+                                </span>
+                                <span class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="connStatus.connections.snmp ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+                                    SNMP {{ connStatus.connections.snmp ? 'OK' : (olt.snmp_community ? 'Fail' : 'N/A') }}
+                                </span>
+                            </div>
+                        </div>
+                        <button @click="testConnection(olt.id)" :disabled="testingConn" class="text-xs text-blue-600 hover:underline">
+                            {{ testingConn ? 'Testing...' : 'Re-test' }}
+                        </button>
+                    </div>
+                    <p v-if="connStatus.connections?.snmp_info" class="mt-1 text-xs text-gray-500">{{ connStatus.connections.snmp_info }}</p>
+                </div>
+                <div v-else-if="testingConn" class="rounded-lg p-4 text-sm bg-gray-50 border border-gray-200 text-gray-600">
+                    Testing koneksi ke OLT...
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-lg bg-white p-6 shadow">
@@ -103,6 +153,8 @@ async function syncSignal(oltId) {
                     <div><span class="text-xs text-gray-500">Status</span><p :class="olt.is_active ? 'text-green-600' : 'text-red-600'" class="font-semibold">{{ olt.is_active ? 'Active' : 'Inactive' }}</p></div>
                     <div><span class="text-xs text-gray-500">Total ONT</span><p class="font-semibold">{{ olt.pon_ports?.reduce((sum, p) => sum + (p.onts?.length || 0), 0) || 0 }}</p></div>
                     <div><span class="text-xs text-gray-500">PON Ports</span><p class="font-semibold">{{ olt.pon_ports?.length || 0 }}</p></div>
+                    <div><span class="text-xs text-gray-500">SNMP Community</span><p class="font-semibold">{{ olt.snmp_community || '-' }}</p></div>
+                    <div><span class="text-xs text-gray-500">Telnet Port</span><p class="font-semibold">{{ olt.telnet_port || 23 }}</p></div>
                 </div>
 
                 <!-- PON Ports -->
