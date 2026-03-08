@@ -9,6 +9,7 @@ use App\Http\Controllers\FiberRouteController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\MikrotikController;
 use App\Http\Controllers\OdcController;
+use App\Http\Controllers\PonPortController;
 use App\Http\Controllers\OdpController;
 use App\Http\Controllers\OltController;
 use App\Http\Controllers\OntController;
@@ -50,6 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/olts/{olt}/unregistered-onts', [OltController::class, 'unregisteredOnts'])->name('olts.unregistered-onts');
     Route::post('/olts/{olt}/register-ont', [OltController::class, 'registerOnt'])->name('olts.register-ont')->middleware('role:admin,operator');
     Route::post('/olts/{olt}/deregister-ont', [OltController::class, 'deregisterOnt'])->name('olts.deregister-ont')->middleware('role:admin,operator');
+
+    // PON Ports
+    Route::post('/pon-ports', [PonPortController::class, 'store'])->name('pon-ports.store')->middleware('role:admin,operator');
+    Route::delete('/pon-ports/{ponPort}', [PonPortController::class, 'destroy'])->name('pon-ports.destroy')->middleware('role:admin');
 
     // ODC
     Route::get('/odcs', [OdcController::class, 'index'])->name('odcs.index');
