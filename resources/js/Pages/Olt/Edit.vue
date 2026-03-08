@@ -64,9 +64,12 @@ function submit() { form.put(route('olts.update', props.olt.id)); }
                             </select>
                         </div>
                         <div><label class="block text-sm font-medium text-gray-700">Host *</label><input v-model="form.host" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
-                        <div><label class="block text-sm font-medium text-gray-700">SSH Port</label><input v-model="form.ssh_port" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">Telnet Port</label><input v-model="form.telnet_port" type="number" placeholder="23" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">SSH Port</label><input v-model="form.ssh_port" type="number" placeholder="22" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Username</label><input v-model="form.username" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Password (blank to keep)</label><input v-model="form.password" type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">SNMP Community</label><input v-model="form.snmp_community" type="text" placeholder="SNMPREAD" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
+                        <div><label class="block text-sm font-medium text-gray-700">SNMP Port</label><input v-model="form.snmp_port" type="number" placeholder="161" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Location</label><input v-model="form.location" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Latitude</label><input v-model="form.lat" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>
                         <div><label class="block text-sm font-medium text-gray-700">Longitude</label><input v-model="form.lng" type="number" step="any" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" /></div>

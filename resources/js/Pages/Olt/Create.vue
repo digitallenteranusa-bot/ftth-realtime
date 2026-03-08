@@ -74,8 +74,12 @@ function submit() { form.post(route('olts.store')); }
                             <p v-if="form.errors.host" class="mt-1 text-sm text-red-600">{{ form.errors.host }}</p>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Telnet Port</label>
+                            <input v-model="form.telnet_port" type="number" placeholder="23" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">SSH Port</label>
-                            <input v-model="form.ssh_port" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                            <input v-model="form.ssh_port" type="number" placeholder="22" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Username *</label>
@@ -84,6 +88,14 @@ function submit() { form.post(route('olts.store')); }
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Password *</label>
                             <input v-model="form.password" type="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">SNMP Community</label>
+                            <input v-model="form.snmp_community" type="text" placeholder="SNMPREAD" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">SNMP Port</label>
+                            <input v-model="form.snmp_port" type="number" placeholder="161" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Location</label>
