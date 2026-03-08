@@ -29,5 +29,7 @@ const { isDark, toggle: toggleDark } = useDarkMode();
         <div class="mt-4 w-full overflow-hidden bg-white dark:bg-gray-800 px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg transition-colors duration-200">
             <slot />
         </div>
+
+        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">Developer: Agus Setyono - Trenggalek</p>
     </div>
 </template>
