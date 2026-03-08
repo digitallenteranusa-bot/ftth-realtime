@@ -40,10 +40,26 @@ class OltController extends Controller
             'lat' => 'nullable|numeric',
             'lng' => 'nullable|numeric',
             'notes' => 'nullable|string',
+            'pon_count' => 'nullable|integer|in:1,2,4,8,16',
         ]);
 
-        Olt::create($validated);
-        return redirect()->route('olts.index')->with('success', 'OLT berhasil ditambahkan.');
+        $ponCount = $validated['pon_count'] ?? 8;
+        unset($validated['pon_count']);
+
+        $olt = Olt::create($validated);
+
+        // Auto-create PON ports
+        for ($p = 1; $p <= $ponCount; $p++) {
+            PonPort::create([
+                'olt_id' => $olt->id,
+                'slot' => 0,
+                'port' => $p,
+                'description' => "PON {$p}",
+                'is_active' => true,
+            ]);
+        }
+
+        return redirect()->route('olts.index')->with('success', "OLT berhasil ditambahkan dengan {$ponCount} PON port.");
     }
 
     public function show(Olt $olt)

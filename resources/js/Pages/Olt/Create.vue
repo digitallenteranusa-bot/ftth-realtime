@@ -7,6 +7,7 @@ const form = useForm({
     name: '', vendor: '', host: '', telnet_port: 23, ssh_port: 22,
     username: '', password: '', snmp_community: 'public', snmp_port: 161,
     is_active: true, location: '', lat: '', lng: '', notes: '',
+    pon_count: 8,
 });
 
 function submit() { form.post(route('olts.store')); }
@@ -55,6 +56,16 @@ function submit() { form.post(route('olts.store')); }
                                 <optgroup label="Lainnya">
                                     <option value="other">Lainnya</option>
                                 </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Jumlah PON Port *</label>
+                            <select v-model="form.pon_count" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                                <option :value="1">1 PON</option>
+                                <option :value="2">2 PON</option>
+                                <option :value="4">4 PON</option>
+                                <option :value="8">8 PON</option>
+                                <option :value="16">16 PON</option>
                             </select>
                         </div>
                         <div>

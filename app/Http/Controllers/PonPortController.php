@@ -22,9 +22,9 @@ class PonPortController extends Controller
         return redirect()->back()->with('success', 'PON Port berhasil ditambahkan.');
     }
 
-    public function destroy(PonPort $ponPort)
+    public function destroy(PonPort $pon_port)
     {
-        $ponPort->delete();
+        $pon_port->delete();
         return redirect()->back()->with('success', 'PON Port berhasil dihapus.');
     }
 }
