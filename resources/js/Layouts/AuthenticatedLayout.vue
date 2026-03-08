@@ -40,6 +40,7 @@ const { isDark, toggle: toggleDark } = useDarkMode();
                                 <NavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</NavLink>
                                 <NavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</NavLink>
                                 <NavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</NavLink>
+                                <NavLink :href="route('nearby.index')" :active="route().current('nearby.*')">Nearby</NavLink>
                                 <NavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</NavLink>
                                 <NavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('users.index')" :active="route().current('users.*')">Users</NavLink>
                                 <NavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</NavLink>
@@ -114,6 +115,7 @@ const { isDark, toggle: toggleDark } = useDarkMode();
                         <ResponsiveNavLink :href="route('customers.index')" :active="route().current('customers.*')">Customers</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('alarms.index')" :active="route().current('alarms.*')">Alarms</ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('tickets.index')" :active="route().current('tickets.*')">Tickets</ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('nearby.index')" :active="route().current('nearby.*')">Nearby</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="['admin','operator'].includes($page.props.auth.user.role)" :href="route('bandwidth-plans.index')" :active="route().current('bandwidth-plans.*')">Bandwidth</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('users.index')" :active="route().current('users.*')">Users</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</ResponsiveNavLink>

@@ -9,6 +9,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FiberRouteController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\MikrotikController;
+use App\Http\Controllers\NearbyController;
 use App\Http\Controllers\OdcController;
 use App\Http\Controllers\PonPortController;
 use App\Http\Controllers\OdpController;
@@ -30,6 +31,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/map', [MapController::class, 'index'])->name('map');
     Route::get('/api/map/elements', [MapController::class, 'elements'])->name('map.elements');
     Route::get('/api/map/fiber-routes', [MapController::class, 'fiberRoutes'])->name('map.fiber-routes');
+
+    // Nearby Search - GPS search ODP & Pelanggan untuk teknisi
+    Route::get('/nearby', [NearbyController::class, 'index'])->name('nearby.index');
+    Route::get('/nearby/search', [NearbyController::class, 'search'])->name('nearby.search');
 
     // Mikrotik - operator kelola infrastruktur, teknisi hanya lihat
     Route::get('/mikrotiks', [MikrotikController::class, 'index'])->name('mikrotiks.index');

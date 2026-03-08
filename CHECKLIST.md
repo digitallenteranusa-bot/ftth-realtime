@@ -1,6 +1,6 @@
 # FTTH Real-Time Monitoring System - Checklist Improvement
 
-## Status: 20/21 Selesai
+## Status: 21/23 Selesai
 
 ---
 
@@ -396,6 +396,38 @@ Command per vendor:
 - `select()` untuk hanya mengambil kolom yang diperlukan
 - Pagination di semua halaman index (15-30 per page)
 - `withQueryString()` untuk mempertahankan filter saat pagination
+
+---
+
+### ✅ #22 - Responsive Mobile Layout + PWA
+
+| Item | File | Status |
+|------|------|--------|
+| PWA meta tags | `resources/views/app.blade.php` | ✅ |
+| Mobile card layout semua Index | `Customer, ONT, OLT, Mikrotik, Ticket, BandwidthPlan, ODC, ODP, User, AuditLog` | ✅ |
+| Alarm responsive layout | `resources/js/Pages/Alarm/Index.vue` | ✅ |
+| Dashboard dark mode | `resources/js/Pages/Dashboard.vue` | ✅ |
+| OLT Show responsive | `resources/js/Pages/Olt/Show.vue` | ✅ |
+| Header responsive stacking | Semua halaman index | ✅ |
+
+**Catatan:** Semua halaman index menggunakan pattern `hidden sm:block` untuk desktop table dan `sm:hidden` untuk mobile card layout. PWA meta tags ditambahkan untuk experience native-like di Android/iOS. Header tombol menggunakan `flex-col gap-3 sm:flex-row` untuk stacking di mobile.
+
+---
+
+### ✅ #23 - GPS Search ODP & Pelanggan untuk Teknisi
+
+| Item | File | Status |
+|------|------|--------|
+| NearbyController | `app/Http/Controllers/NearbyController.php` | ✅ |
+| Nearby/Index.vue | `resources/js/Pages/Nearby/Index.vue` | ✅ |
+| Route nearby.index & nearby.search | `routes/web.php` | ✅ |
+| NavLink desktop & responsive | `resources/js/Layouts/AuthenticatedLayout.vue` | ✅ |
+| Geolocation API integration | `Nearby/Index.vue` | ✅ |
+| Haversine distance formula | `NearbyController::search()` | ✅ |
+| Sort by distance | `NearbyController::search()` | ✅ |
+| Google Maps navigation | `Nearby/Index.vue` - openMaps() | ✅ |
+
+**Catatan:** Halaman Nearby Search menggunakan Browser Geolocation API untuk mendapatkan posisi GPS teknisi, lalu mencari ODP dan pelanggan terdekat menggunakan Haversine formula di MySQL. Hasil diurutkan berdasarkan jarak, dengan tombol navigasi ke Google Maps. Filter radius (1-50 km) dan tipe (ODP/Pelanggan/Semua). Semua role bisa akses.
 
 ---
 
