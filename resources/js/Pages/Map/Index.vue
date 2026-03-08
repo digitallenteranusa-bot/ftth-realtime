@@ -190,15 +190,19 @@ function onMapClick(e) {
     updateDrawingLine();
 }
 
+let midpointMarkers = [];
+
 function updateDrawingLine() {
     // Remove old drawing elements
     if (drawingPolyline) map.removeLayer(drawingPolyline);
     drawingMarkers.forEach(m => map.removeLayer(m));
+    midpointMarkers.forEach(m => map.removeLayer(m));
     drawingMarkers = [];
+    midpointMarkers = [];
 
     if (drawingPoints.value.length >= 1) {
         drawingPolyline = L.polyline(drawingPoints.value, {
-            color: routeForm.value.color, weight: 3, opacity: 0.9,
+            color: routeForm.value.color, weight: 4, opacity: 0.9,
             dashArray: '8 4',
         }).addTo(map);
     }
@@ -217,6 +221,9 @@ function updateDrawingLine() {
             drawingPoints.value[i] = [e.latlng.lat, e.latlng.lng];
             if (drawingPolyline) drawingPolyline.setLatLngs(drawingPoints.value);
         });
+        marker.on('dragend', () => {
+            updateDrawingLine();
+        });
         // Right click to remove point
         marker.on('contextmenu', () => {
             if (drawingPoints.value.length > 2) {
@@ -226,6 +233,38 @@ function updateDrawingLine() {
         });
         drawingMarkers.push(marker);
     });
+
+    // Add midpoint markers between each pair of points (for inserting new waypoints)
+    for (let i = 0; i < drawingPoints.value.length - 1; i++) {
+        const p1 = drawingPoints.value[i];
+        const p2 = drawingPoints.value[i + 1];
+        const midLat = (p1[0] + p2[0]) / 2;
+        const midLng = (p1[1] + p2[1]) / 2;
+        const insertIndex = i + 1;
+
+        const midMarker = L.marker([midLat, midLng], {
+            draggable: true,
+            icon: L.divIcon({
+                className: '',
+                html: `<div style="width:10px;height:10px;border-radius:50%;background:white;border:2px solid #3b82f6;box-shadow:0 1px 2px rgba(0,0,0,0.3);cursor:pointer;opacity:0.7"></div>`,
+                iconSize: [10, 10], iconAnchor: [5, 5],
+            }),
+        }).addTo(map);
+
+        midMarker.on('dragstart', () => {
+            // Insert a new point at this position
+            drawingPoints.value.splice(insertIndex, 0, [midLat, midLng]);
+        });
+        midMarker.on('drag', (e) => {
+            drawingPoints.value[insertIndex] = [e.latlng.lat, e.latlng.lng];
+            if (drawingPolyline) drawingPolyline.setLatLngs(drawingPoints.value);
+        });
+        midMarker.on('dragend', () => {
+            updateDrawingLine();
+        });
+
+        midpointMarkers.push(midMarker);
+    }
 
     // Show distance info
     if (drawingPoints.value.length >= 2) {
@@ -254,7 +293,9 @@ function cancelDrawing() {
     map.getContainer().style.cursor = '';
     if (drawingPolyline) { map.removeLayer(drawingPolyline); drawingPolyline = null; }
     drawingMarkers.forEach(m => map.removeLayer(m));
+    midpointMarkers.forEach(m => map.removeLayer(m));
     drawingMarkers = [];
+    midpointMarkers = [];
 }
 
 function finishDrawing() {
