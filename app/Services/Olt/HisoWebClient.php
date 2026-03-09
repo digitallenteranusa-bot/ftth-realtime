@@ -21,13 +21,13 @@ class HisoWebClient
 
     /**
      * Fetch ONU list for a specific PON port via web interface
-     * URL: /onuOverviewPonList.asp?oltponno=0/{port}
+     * URL: /onuOverview.asp?oltponno={slot}/{port}
      *
      * Returns array of ONUs with all diagnostic data
      */
     public function getOnuList(int $slot, int $port): array
     {
-        $url = "{$this->baseUrl}/onuOverviewPonList.asp?oltponno={$slot}/{$port}";
+        $url = "{$this->baseUrl}/onuOverview.asp?oltponno={$slot}/{$port}";
 
         try {
             $response = Http::withBasicAuth($this->username, $this->password)
@@ -68,7 +68,7 @@ class HisoWebClient
     public function testConnection(): array
     {
         try {
-            $url = "{$this->baseUrl}/onuOverviewPonList.asp?oltponno=0/1";
+            $url = "{$this->baseUrl}/onuOverview.asp?oltponno=0/1";
             Log::debug("HIOSO web test: connecting to {$url} with user={$this->username}");
 
             $response = Http::withBasicAuth($this->username, $this->password)
