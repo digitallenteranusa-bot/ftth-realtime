@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\RolePermission;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,6 +36,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'userRole' => $request->user()?->role,
+            'permissions' => fn () => $request->user()
+                ? RolePermission::getPermissionsForRole($request->user()->role)
+                : [],
             'flash' => fn () => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

@@ -16,6 +16,7 @@ use App\Http\Controllers\OdpController;
 use App\Http\Controllers\OltController;
 use App\Http\Controllers\OntController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\TroubleTicketController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +139,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit Logs (admin only)
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('role:admin');
+
+    // Role Permissions (admin only)
+    Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index')->middleware('role:admin');
+    Route::post('/role-permissions', [RolePermissionController::class, 'update'])->name('role-permissions.update')->middleware('role:admin');
 
     // Users (admin only)
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('role:admin');
