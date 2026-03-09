@@ -163,7 +163,7 @@ function can(permission) {
             <!-- Footer -->
             <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-4 mt-8 transition-colors duration-200">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Developer: Agus Setyono - Trenggalek
+                    &copy; 2026 FTTH Realtime Monitoring. All rights reserved. | Developed by Agus Setyono
                 </div>
             </footer>
         </div>
