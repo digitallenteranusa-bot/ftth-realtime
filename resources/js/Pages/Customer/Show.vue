@@ -36,7 +36,15 @@ onMounted(() => {
     satellite.addTo(map);
     L.control.layers({ 'Satelit': satellite, 'Jalan': streets }).addTo(map);
 
-    L.marker([lat, lng]).addTo(map)
+    const pinIcon = L.divIcon({
+        html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e53e3e" stroke="#fff" stroke-width="1" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>`,
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+    });
+
+    L.marker([lat, lng], { icon: pinIcon }).addTo(map)
         .bindPopup(`<b>${props.customer.name}</b><br>${props.customer.address || ''}`)
         .openPopup();
 });
