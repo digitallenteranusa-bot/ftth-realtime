@@ -1,26 +1,33 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const myLat = ref(null);
 const myLng = ref(null);
-const manualLat = ref('');
-const manualLng = ref('');
-const showManual = ref(false);
+const coordsInput = ref('');
 const radius = ref(5);
 const type = ref('all');
 const loading = ref(false);
 const locating = ref(false);
 const error = ref('');
+const gpsAvailable = ref(true);
 const odps = ref([]);
 const customers = ref([]);
 const hasSearched = ref(false);
 
+onMounted(() => {
+    // GPS/Geolocation hanya tersedia di HTTPS atau localhost
+    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (!isSecure || !navigator.geolocation) {
+        gpsAvailable.value = false;
+    }
+});
+
 function getLocation() {
     if (!navigator.geolocation) {
-        error.value = 'Browser tidak mendukung GPS/Geolocation.';
-        showManual.value = true;
+        gpsAvailable.value = false;
+        error.value = 'GPS tidak tersedia. Gunakan input koordinat manual.';
         return;
     }
     locating.value = true;
@@ -29,38 +36,59 @@ function getLocation() {
         (pos) => {
             myLat.value = pos.coords.latitude;
             myLng.value = pos.coords.longitude;
+            coordsInput.value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
             locating.value = false;
-            showManual.value = false;
             searchNearby();
         },
         (err) => {
             locating.value = false;
-            showManual.value = true;
-            if (err.code === 1) error.value = 'Akses lokasi ditolak oleh browser. Gunakan input manual atau izinkan GPS di pengaturan browser (klik ikon gembok di address bar).';
-            else if (err.code === 2) error.value = 'Lokasi tidak tersedia. Pastikan GPS aktif di perangkat Anda, atau gunakan input manual.';
-            else error.value = 'Timeout mendapatkan lokasi. Coba lagi atau gunakan input manual.';
+            gpsAvailable.value = false;
+            if (err.code === 1) error.value = 'GPS ditolak browser. Situs harus HTTPS untuk GPS otomatis. Gunakan input koordinat manual.';
+            else if (err.code === 2) error.value = 'GPS tidak tersedia. Pastikan GPS aktif, atau input koordinat manual.';
+            else error.value = 'Timeout GPS. Coba lagi atau input koordinat manual.';
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 }
 
-function useManualCoords() {
-    const lat = parseFloat(manualLat.value);
-    const lng = parseFloat(manualLng.value);
-    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        error.value = 'Koordinat tidak valid. Format: Latitude (-90 s/d 90), Longitude (-180 s/d 180).';
-        return;
+function parseCoords() {
+    const input = coordsInput.value.trim();
+    if (!input) {
+        error.value = 'Masukkan koordinat. Contoh: -8.1215, 111.5629';
+        return false;
     }
+
+    // Support formats: "-8.1215, 111.5629" or "-8.1215 111.5629" or Google Maps URL
+    let lat, lng;
+
+    // Try Google Maps URL format
+    const urlMatch = input.match(/@?([-\d.]+),([-\d.]+)/);
+    if (urlMatch) {
+        lat = parseFloat(urlMatch[1]);
+        lng = parseFloat(urlMatch[2]);
+    } else {
+        // Try comma or space separated
+        const parts = input.split(/[,\s]+/).filter(Boolean);
+        if (parts.length >= 2) {
+            lat = parseFloat(parts[0]);
+            lng = parseFloat(parts[1]);
+        }
+    }
+
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        error.value = 'Koordinat tidak valid. Format: -8.1215, 111.5629';
+        return false;
+    }
+
     myLat.value = lat;
     myLng.value = lng;
     error.value = '';
-    searchNearby();
+    return true;
 }
 
 async function searchNearby() {
     if (!myLat.value || !myLng.value) {
-        getLocation();
-        return;
+        if (!parseCoords()) return;
     }
     loading.value = true;
     error.value = '';
@@ -83,6 +111,12 @@ async function searchNearby() {
     }
 }
 
+function submitCoords() {
+    if (parseCoords()) {
+        searchNearby();
+    }
+}
+
 function formatDistance(km) {
     if (km < 1) return `${Math.round(km * 1000)} m`;
     return `${km.toFixed(1)} km`;
@@ -90,6 +124,10 @@ function formatDistance(km) {
 
 function openMaps(lat, lng) {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+function openMyLocationMaps() {
+    window.open('https://www.google.com/maps/@?api=1&map_action=map', '_blank');
 }
 </script>
 
@@ -101,77 +139,80 @@ function openMaps(lat, lng) {
         </template>
         <div class="py-6">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <!-- GPS Controls -->
+                <!-- GPS/Location Controls -->
                 <div class="rounded-lg bg-white p-4 shadow mb-4">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                        <div class="flex-1">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Lokasi Anda</label>
-                            <div class="flex items-center gap-2">
-                                <button @click="getLocation" :disabled="locating"
-                                    class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50">
-                                    <svg v-if="locating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    {{ locating ? 'Mencari...' : 'Deteksi GPS' }}
-                                </button>
-                                <button @click="showManual = !showManual" type="button"
-                                    class="text-xs text-blue-600 hover:underline">
-                                    {{ showManual ? 'Tutup' : 'Input Manual' }}
-                                </button>
-                                <span v-if="myLat && !showManual" class="text-xs text-green-600 font-medium">
-                                    {{ myLat.toFixed(6) }}, {{ myLng.toFixed(6) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Radius</label>
-                            <select v-model="radius" @change="hasSearched && searchNearby()" class="w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                <option :value="1">1 km</option>
-                                <option :value="2">2 km</option>
-                                <option :value="5">5 km</option>
-                                <option :value="10">10 km</option>
-                                <option :value="20">20 km</option>
-                                <option :value="50">50 km</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipe</label>
-                            <select v-model="type" @change="hasSearched && searchNearby()" class="w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                <option value="all">Semua</option>
-                                <option value="odp">ODP</option>
-                                <option value="customer">Pelanggan</option>
-                            </select>
-                        </div>
-                        <button @click="searchNearby" :disabled="loading || !myLat"
-                            class="rounded-md bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 disabled:opacity-50">
-                            {{ loading ? 'Mencari...' : 'Cari' }}
+                    <!-- GPS Button (jika HTTPS) -->
+                    <div v-if="gpsAvailable" class="mb-3">
+                        <button @click="getLocation" :disabled="locating"
+                            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto justify-center">
+                            <svg v-if="locating" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {{ locating ? 'Mendeteksi GPS...' : 'Deteksi GPS Otomatis' }}
                         </button>
                     </div>
 
-                    <!-- Manual coordinate input -->
-                    <div v-if="showManual" class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <p class="text-xs text-gray-500 mb-2">Masukkan koordinat manual (bisa copy dari Google Maps):</p>
+                    <!-- Koordinat Input (selalu tampil) -->
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">
+                                Koordinat
+                                <span class="text-gray-400 font-normal">(paste dari Google Maps)</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <input v-model="coordsInput" type="text"
+                                    placeholder="-8.1215, 111.5629"
+                                    @keyup.enter="submitCoords"
+                                    class="flex-1 rounded-md border-gray-300 shadow-sm text-sm" />
+                                <button @click="openMyLocationMaps" type="button"
+                                    title="Buka Google Maps untuk lihat koordinat lokasi Anda"
+                                    class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    <span class="hidden sm:inline">Google Maps</span>
+                                </button>
+                            </div>
+                            <p v-if="!gpsAvailable" class="mt-1 text-xs text-amber-600">GPS otomatis tidak tersedia (butuh HTTPS). Copy koordinat dari Google Maps lalu paste di atas.</p>
+                        </div>
+
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
-                            <div class="flex-1">
-                                <label class="block text-xs font-medium text-gray-600">Latitude</label>
-                                <input v-model="manualLat" type="text" placeholder="-8.1215652"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm" />
+                            <div class="flex-1 flex gap-2">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Radius</label>
+                                    <select v-model="radius" @change="hasSearched && myLat && searchNearby()" class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                        <option :value="1">1 km</option>
+                                        <option :value="2">2 km</option>
+                                        <option :value="5">5 km</option>
+                                        <option :value="10">10 km</option>
+                                        <option :value="20">20 km</option>
+                                        <option :value="50">50 km</option>
+                                    </select>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Tipe</label>
+                                    <select v-model="type" @change="hasSearched && myLat && searchNearby()" class="w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                        <option value="all">Semua</option>
+                                        <option value="odp">ODP</option>
+                                        <option value="customer">Pelanggan</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="flex-1">
-                                <label class="block text-xs font-medium text-gray-600">Longitude</label>
-                                <input v-model="manualLng" type="text" placeholder="111.5629408"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm" />
-                            </div>
-                            <button @click="useManualCoords"
-                                class="rounded-md bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800">
-                                Gunakan
+                            <button @click="submitCoords" :disabled="loading"
+                                class="rounded-md bg-teal-600 px-6 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50">
+                                {{ loading ? 'Mencari...' : 'Cari Terdekat' }}
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Koordinat aktif -->
+                    <div v-if="myLat" class="mt-2 text-xs text-green-600 font-medium">
+                        Lokasi: {{ myLat.toFixed(6) }}, {{ myLng.toFixed(6) }}
                     </div>
 
                     <!-- Error message -->
@@ -269,8 +310,8 @@ function openMaps(lat, lng) {
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p class="mt-3 text-gray-500">Tekan <strong>Deteksi GPS</strong> untuk mencari ODP dan pelanggan terdekat.</p>
-                    <p class="mt-1 text-xs text-gray-400">Atau gunakan <strong>Input Manual</strong> jika GPS tidak tersedia.</p>
+                    <p class="mt-3 text-gray-500">Masukkan koordinat dan tekan <strong>Cari Terdekat</strong>.</p>
+                    <p class="mt-1 text-xs text-gray-400">Buka <strong>Google Maps</strong> di HP, tekan tahan lokasi Anda, lalu copy koordinat.</p>
                 </div>
             </div>
         </div>
