@@ -56,65 +56,51 @@ async function testConnection(oltId) {
     }
 }
 
-async function syncSignal(oltId) {
+function syncSignal(oltId) {
     syncing.value = true;
     syncMessage.value = '';
     syncMethod.value = '';
 
-    try {
-        const response = await fetch(route('olts.sync-signal', oltId), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                'Accept': 'application/json',
-            },
-        });
-        const data = await response.json();
-        syncSuccess.value = data.success;
-        syncMessage.value = data.message;
-        syncMethod.value = data.method || '';
-
-        if (data.success) {
-            setTimeout(() => router.reload(), 1500);
-        }
-    } catch (e) {
-        syncSuccess.value = false;
-        syncMessage.value = 'Gagal menghubungi server.';
-    } finally {
-        syncing.value = false;
-        setTimeout(() => { syncMessage.value = ''; }, 8000);
-    }
+    router.post(route('olts.sync-signal', oltId), {}, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const flash = page.props.flash;
+            syncSuccess.value = flash?.success ?? false;
+            syncMessage.value = flash?.message ?? 'Sync selesai.';
+            syncMethod.value = flash?.method ?? '';
+        },
+        onError: () => {
+            syncSuccess.value = false;
+            syncMessage.value = 'Gagal menghubungi server.';
+        },
+        onFinish: () => {
+            syncing.value = false;
+            setTimeout(() => { syncMessage.value = ''; }, 8000);
+        },
+    });
 }
 
-async function discoverOnus(oltId) {
+function discoverOnus(oltId) {
     discovering.value = true;
     discoverMessage.value = '';
     discoveredOnus.value = [];
 
-    try {
-        const response = await fetch(route('olts.discover-onus', oltId), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                'Accept': 'application/json',
-            },
-        });
-        const data = await response.json();
-        discoverSuccess.value = data.success;
-        discoverMessage.value = data.message;
-        discoveredOnus.value = data.discovered || [];
-
-        if (data.success && data.updated > 0) {
-            setTimeout(() => router.reload(), 2000);
-        }
-    } catch (e) {
-        discoverSuccess.value = false;
-        discoverMessage.value = 'Gagal menghubungi server.';
-    } finally {
-        discovering.value = false;
-    }
+    router.post(route('olts.discover-onus', oltId), {}, {
+        preserveScroll: true,
+        onSuccess: (page) => {
+            const flash = page.props.flash;
+            discoverSuccess.value = flash?.success ?? false;
+            discoverMessage.value = flash?.message ?? 'Discover selesai.';
+            discoveredOnus.value = flash?.discovered ?? [];
+        },
+        onError: () => {
+            discoverSuccess.value = false;
+            discoverMessage.value = 'Gagal menghubungi server.';
+        },
+        onFinish: () => {
+            discovering.value = false;
+        },
+    });
 }
 
 onMounted(() => {
@@ -173,7 +159,7 @@ onMounted(() => {
                 <div v-if="discoverMessage" class="rounded-lg p-4 text-sm border" :class="discoverSuccess ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-red-50 text-red-800 border-red-200'">
                     <p class="font-medium">{{ discoverMessage }}</p>
                     <div v-if="discoveredOnus.length" class="mt-3 space-y-1">
-                        <p class="text-xs font-semibold text-gray-600">ONU ditemukan via SNMP:</p>
+                        <p class="text-xs font-semibold text-gray-600">ONU ditemukan:</p>
                         <div v-for="onu in discoveredOnus" :key="onu.if_index" class="flex items-center gap-3 text-xs bg-white rounded px-3 py-1.5 border">
                             <span class="font-mono font-semibold">{{ onu.if_descr }}</span>
                             <span class="rounded-full px-2 py-0.5" :class="onu.status === 'online' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">{{ onu.status }}</span>

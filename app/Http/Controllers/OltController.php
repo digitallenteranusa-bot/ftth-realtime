@@ -257,15 +257,15 @@ class OltController extends Controller
         $driver = OltServiceFactory::make($olt);
 
         if (!$driver->connect()) {
-            return response()->json([
+            return back()->with('flash', [
                 'success' => false,
                 'message' => 'Tidak dapat terhubung ke OLT.',
-            ], 500);
+            ]);
         }
 
         try {
             if (!($driver instanceof HisoOltDriver)) {
-                return response()->json([
+                return back()->with('flash', [
                     'success' => false,
                     'message' => 'Fitur discover hanya tersedia untuk OLT HIOSO.',
                 ]);
@@ -290,7 +290,7 @@ class OltController extends Controller
             }
 
             if (empty($discoveredOnus)) {
-                return response()->json([
+                return back()->with('flash', [
                     'success' => false,
                     'message' => 'Tidak ditemukan ONU di OLT.',
                 ]);
@@ -359,7 +359,7 @@ class OltController extends Controller
                 }
             }
 
-            return response()->json([
+            return back()->with('flash', [
                 'success' => true,
                 'message' => "Ditemukan " . count($discoveredOnus) . " ONU via {$method}. {$updated} ONT berhasil di-update.",
                 'discovered' => $discoveredOnus,
@@ -380,10 +380,10 @@ class OltController extends Controller
         $driver = OltServiceFactory::make($olt);
 
         if (!$driver->connect()) {
-            return response()->json([
+            return back()->with('flash', [
                 'success' => false,
                 'message' => 'Tidak dapat terhubung ke OLT. Periksa host, port, username, dan password.',
-            ], 500);
+            ]);
         }
 
         $updated = 0;
@@ -446,7 +446,7 @@ class OltController extends Controller
             $driver->disconnect();
         }
 
-        return response()->json([
+        return back()->with('flash', [
             'success' => true,
             'message' => "{$updated} ONT berhasil disinkronkan via {$method}.",
             'updated' => $updated,
