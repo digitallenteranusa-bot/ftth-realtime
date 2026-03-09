@@ -58,13 +58,17 @@ class HisoOltDriver implements OltDriverInterface
         return $this->webConnected || $this->telnetConnected || $this->snmp !== null;
     }
 
+    protected string $webMessage = '';
+
     protected function initWeb(): void
     {
         $this->web = new HisoWebClient($this->olt);
-        $this->webConnected = $this->web->testConnection();
+        $result = $this->web->testConnection();
+        $this->webConnected = $result['connected'];
+        $this->webMessage = $result['message'] ?? '';
 
         if (!$this->webConnected) {
-            Log::info("Web interface not available for OLT {$this->olt->name}");
+            Log::info("Web interface not available for OLT {$this->olt->name}: {$this->webMessage}");
             $this->web = null;
         }
     }
@@ -72,6 +76,11 @@ class HisoOltDriver implements OltDriverInterface
     public function isWebConnected(): bool
     {
         return $this->webConnected;
+    }
+
+    public function getWebMessage(): string
+    {
+        return $this->webMessage;
     }
 
     protected function initSnmp(): void

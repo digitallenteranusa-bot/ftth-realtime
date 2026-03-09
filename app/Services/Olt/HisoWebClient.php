@@ -65,16 +65,29 @@ class HisoWebClient
     /**
      * Test web connection
      */
-    public function testConnection(): bool
+    public function testConnection(): array
     {
         try {
+            $url = "{$this->baseUrl}/onuOverviewPonList.asp?oltponno=0/1";
+            Log::debug("HIOSO web test: connecting to {$url} with user={$this->username}");
+
             $response = Http::withBasicAuth($this->username, $this->password)
                 ->timeout(10)
-                ->get("{$this->baseUrl}/onuOverviewPonList.asp?oltponno=0/1");
+                ->get($url);
 
-            return $response->successful() && str_contains($response->body(), 'onutable');
+            $status = $response->status();
+            $hasTable = str_contains($response->body(), 'onutable');
+
+            Log::debug("HIOSO web test: HTTP {$status}, onutable=" . ($hasTable ? 'found' : 'not found') . ", body_length=" . strlen($response->body()));
+
+            if ($response->successful() && $hasTable) {
+                return ['connected' => true, 'message' => "HTTP {$status} OK"];
+            }
+
+            return ['connected' => false, 'message' => "HTTP {$status}" . ($response->successful() ? ', onutable not found' : '')];
         } catch (\Throwable $e) {
-            return false;
+            Log::warning("HIOSO web test failed: {$e->getMessage()}");
+            return ['connected' => false, 'message' => $e->getMessage()];
         }
     }
 

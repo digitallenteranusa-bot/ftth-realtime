@@ -192,6 +192,7 @@ onMounted(() => {
                             {{ testingConn ? 'Testing...' : 'Re-test' }}
                         </button>
                     </div>
+                    <p v-if="connStatus.connections?.web_info && !connStatus.connections?.web" class="mt-1 text-xs text-red-500">Web: {{ connStatus.connections.web_info }}</p>
                     <p v-if="connStatus.connections?.snmp_info" class="mt-1 text-xs text-gray-500">{{ connStatus.connections.snmp_info }}</p>
                 </div>
                 <div v-else-if="testingConn" class="rounded-lg p-4 text-sm bg-gray-50 border border-gray-200 text-gray-600">

@@ -224,6 +224,7 @@ class OltController extends Controller
 
         if ($driver instanceof HisoOltDriver) {
             $result['web'] = $driver->isWebConnected();
+            $result['web_info'] = $driver->getWebMessage();
             $result['telnet'] = $driver->isTelnetConnected();
 
             $snmpTest = $driver->testSnmpConnection();
