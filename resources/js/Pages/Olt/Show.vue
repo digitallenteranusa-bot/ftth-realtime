@@ -188,8 +188,12 @@ onMounted(() => {
                         <div class="flex items-center gap-3">
                             <span class="font-medium" :class="connStatus.success ? 'text-emerald-800' : 'text-yellow-800'">{{ connStatus.message }}</span>
                             <div v-if="connStatus.connections" class="flex gap-2">
+                                <span v-if="connStatus.connections.web !== undefined" class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="connStatus.connections.web ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+                                    Web {{ connStatus.connections.web ? 'OK' : 'Fail' }}
+                                </span>
                                 <span class="rounded-full px-2 py-0.5 text-xs font-medium"
-                                    :class="connStatus.connections.telnet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                                    :class="connStatus.connections.telnet ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
                                     Telnet {{ connStatus.connections.telnet ? 'OK' : 'Fail' }}
                                 </span>
                                 <span class="rounded-full px-2 py-0.5 text-xs font-medium"

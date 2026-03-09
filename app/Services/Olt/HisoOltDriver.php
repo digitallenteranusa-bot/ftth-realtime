@@ -9,7 +9,9 @@ class HisoOltDriver implements OltDriverInterface
 {
     protected ?TelnetConnection $telnet = null;
     protected ?SnmpConnection $snmp = null;
+    protected ?HisoWebClient $web = null;
     protected bool $telnetConnected = false;
+    protected bool $webConnected = false;
 
     /**
      * CTC Standard EPON MIB OIDs (enterprise 17409)
@@ -44,13 +46,32 @@ class HisoOltDriver implements OltDriverInterface
 
     public function connect(): bool
     {
-        // Try SNMP first (faster, non-interactive)
+        // Try Web interface first (most complete data for HIOSO)
+        $this->initWeb();
+
+        // Try SNMP
         $this->initSnmp();
 
-        // Then try Telnet (don't fail if telnet fails but SNMP works)
+        // Try Telnet last
         $this->connectTelnet();
 
-        return $this->telnetConnected || $this->snmp !== null;
+        return $this->webConnected || $this->telnetConnected || $this->snmp !== null;
+    }
+
+    protected function initWeb(): void
+    {
+        $this->web = new HisoWebClient($this->olt);
+        $this->webConnected = $this->web->testConnection();
+
+        if (!$this->webConnected) {
+            Log::info("Web interface not available for OLT {$this->olt->name}");
+            $this->web = null;
+        }
+    }
+
+    public function isWebConnected(): bool
+    {
+        return $this->webConnected;
     }
 
     protected function initSnmp(): void
@@ -107,7 +128,9 @@ class HisoOltDriver implements OltDriverInterface
         $this->telnet?->disconnect();
         $this->telnet = null;
         $this->snmp = null;
+        $this->web = null;
         $this->telnetConnected = false;
+        $this->webConnected = false;
     }
 
     protected function execute(string $command): string
@@ -403,11 +426,20 @@ class HisoOltDriver implements OltDriverInterface
     // ─────────────────────────────────────────
 
     /**
-     * Get all ONUs on a specific EPON port - SNMP first, Telnet fallback
+     * Get all ONUs on a specific EPON port
+     * Priority: Web > SNMP > Telnet
      */
     public function getOntList(int $slot, int $port): array
     {
-        // Try SNMP discovery first
+        // Try Web interface first (most complete data)
+        if ($this->web) {
+            $onus = $this->web->getOnuList($slot, $port);
+            if (!empty($onus)) {
+                return $onus;
+            }
+        }
+
+        // Try SNMP discovery
         if ($this->snmp) {
             $allOnus = $this->discoverOnuSnmp();
             $filtered = array_filter($allOnus, fn($o) => $o['slot'] === $slot && $o['port'] === $port);
@@ -430,52 +462,114 @@ class HisoOltDriver implements OltDriverInterface
     }
 
     /**
-     * Get ONU status - tries SNMP first, falls back to Telnet
+     * Get ONU status
      */
     public function getOntStatus(int $slot, int $port, int $ontId): array
     {
-        // Try SNMP first
+        // Web interface
+        if ($this->web) {
+            $onus = $this->web->getOnuList($slot, $port);
+            foreach ($onus as $onu) {
+                if ($onu['onu_id'] === $ontId) {
+                    return ['status' => $onu['status'], 'mac' => $onu['mac'] ?? null, 'distance' => $onu['distance'] ?? null];
+                }
+            }
+        }
+
+        // SNMP
         $data = $this->getOntStatusSnmp($slot, $port, $ontId);
         if (!empty($data)) return $data;
 
-        // Fallback to Telnet
-        $output = $this->execute("show epon onu-information interface epon 0/{$slot}/{$port} onu {$ontId}");
-        return $this->parseOnuStatus($output);
+        // Telnet
+        if ($this->telnetConnected) {
+            $output = $this->execute("show epon onu-information interface epon 0/{$slot}/{$port} onu {$ontId}");
+            return $this->parseOnuStatus($output);
+        }
+
+        return [];
     }
 
     /**
-     * Get optical power - tries SNMP first, falls back to Telnet
+     * Get optical power for a specific ONU
+     * Priority: Web > SNMP > Telnet
      */
     public function getOpticalPower(int $slot, int $port, int $ontId): array
     {
-        // Try SNMP first (faster, no interactive session needed)
+        // Web interface (has all data including temperature, voltage)
+        if ($this->web) {
+            $onus = $this->web->getOnuList($slot, $port);
+            foreach ($onus as $onu) {
+                if ($onu['onu_id'] === $ontId) {
+                    Log::debug("Got optical power via Web for ONU {$ontId} on port {$slot}/{$port}");
+                    return [
+                        'rx_power' => $onu['rx_power'],
+                        'tx_power' => $onu['tx_power'],
+                        'temperature' => $onu['temperature'] ?? null,
+                        'voltage' => $onu['voltage'] ?? null,
+                    ];
+                }
+            }
+        }
+
+        // SNMP
         $data = $this->getOpticalPowerSnmp($slot, $port, $ontId);
         if (!empty($data)) {
             Log::debug("Got optical power via SNMP for ONU {$ontId} on port {$slot}/{$port}");
             return $data;
         }
 
-        // Fallback to Telnet
-        Log::debug("SNMP failed, falling back to Telnet for ONU {$ontId} on port {$slot}/{$port}");
-        $output = $this->execute("show epon onu-optical-transceiver-diagnosis interface epon 0/{$slot}/{$port} onu {$ontId}");
-        return $this->parseOpticalPower($output);
+        // Telnet
+        if ($this->telnetConnected) {
+            Log::debug("Falling back to Telnet for ONU {$ontId} on port {$slot}/{$port}");
+            $output = $this->execute("show epon onu-optical-transceiver-diagnosis interface epon 0/{$slot}/{$port} onu {$ontId}");
+            return $this->parseOpticalPower($output);
+        }
+
+        return [];
     }
 
     /**
-     * Get all optical power for all ONUs on a port - tries SNMP first
+     * Get all optical power for all ONUs on a port
+     * Priority: Web > SNMP > Telnet
      */
     public function getAllOpticalPower(int $slot, int $port): array
     {
-        // Try SNMP walk first
+        // Web interface (returns all data at once)
+        if ($this->web) {
+            $onus = $this->web->getOnuList($slot, $port);
+            if (!empty($onus)) {
+                $results = [];
+                foreach ($onus as $onu) {
+                    $results[$onu['onu_id']] = [
+                        'rx_power' => $onu['rx_power'],
+                        'tx_power' => $onu['tx_power'],
+                        'temperature' => $onu['temperature'] ?? null,
+                        'voltage' => $onu['voltage'] ?? null,
+                        'name' => $onu['name'] ?? null,
+                        'mac' => $onu['mac'] ?? null,
+                        'status' => $onu['status'] ?? null,
+                        'distance' => $onu['distance'] ?? null,
+                    ];
+                }
+                Log::debug("Got bulk optical power via Web for port {$slot}/{$port}: " . count($results) . " ONUs");
+                return $results;
+            }
+        }
+
+        // SNMP walk
         $data = $this->getAllOpticalPowerSnmp($slot, $port);
         if (!empty($data)) {
             Log::debug("Got bulk optical power via SNMP for port {$slot}/{$port}");
             return $data;
         }
 
-        // Fallback to Telnet
-        $output = $this->execute("show epon onu-optical-transceiver-diagnosis interface epon 0/{$slot}/{$port}");
-        return $this->parseAllOpticalPower($output);
+        // Telnet
+        if ($this->telnetConnected) {
+            $output = $this->execute("show epon onu-optical-transceiver-diagnosis interface epon 0/{$slot}/{$port}");
+            return $this->parseAllOpticalPower($output);
+        }
+
+        return [];
     }
 
     /**

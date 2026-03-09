@@ -223,18 +223,20 @@ class OltController extends Controller
         $driver->connect();
 
         if ($driver instanceof HisoOltDriver) {
+            $result['web'] = $driver->isWebConnected();
             $result['telnet'] = $driver->isTelnetConnected();
 
             $snmpTest = $driver->testSnmpConnection();
             $result['snmp'] = $snmpTest['connected'];
             $result['snmp_info'] = $snmpTest['sys_descr'] ?? ($snmpTest['reason'] ?? null);
         } else {
-            $result['telnet'] = true; // Other drivers use SSH, report as telnet for simplicity
+            $result['telnet'] = true;
         }
 
         $driver->disconnect();
 
         $methods = [];
+        if ($result['web'] ?? false) $methods[] = 'Web';
         if ($result['telnet']) $methods[] = 'Telnet';
         if ($result['snmp']) $methods[] = 'SNMP';
 
@@ -262,62 +264,107 @@ class OltController extends Controller
         }
 
         try {
-            if (!($driver instanceof HisoOltDriver) || !$driver->hasSnmp()) {
+            if (!($driver instanceof HisoOltDriver)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Fitur discover hanya tersedia untuk OLT HIOSO dengan SNMP aktif.',
+                    'message' => 'Fitur discover hanya tersedia untuk OLT HIOSO.',
                 ]);
             }
 
-            $discoveredOnus = $driver->discoverOnuSnmp();
+            // Try Web interface first, then SNMP
+            $discoveredOnus = [];
+            $method = 'unknown';
+
+            if ($driver->isWebConnected()) {
+                $ponPorts = $olt->ponPorts()->where('is_active', true)->get();
+                foreach ($ponPorts as $pp) {
+                    $onus = $driver->getOntList($pp->slot, $pp->port);
+                    $discoveredOnus = array_merge($discoveredOnus, $onus);
+                }
+                $method = 'Web';
+            }
+
+            if (empty($discoveredOnus) && $driver->hasSnmp()) {
+                $discoveredOnus = $driver->discoverOnuSnmp();
+                $method = 'SNMP';
+            }
 
             if (empty($discoveredOnus)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tidak ditemukan ONU di OLT. Pastikan SNMP bisa membaca interface EPON.',
-                    'raw_debug' => $driver->snmpWalkRaw('1.3.6.1.2.1.2.2.1.2'),
+                    'message' => 'Tidak ditemukan ONU di OLT.',
                 ]);
             }
 
-            // Auto-assign ONT IDs to existing ONTs that don't have one
+            // Auto-assign ONT IDs and update signal data
             $updated = 0;
-            $ponPorts = $olt->ponPorts()->with('onts')->get()->keyBy(function ($pp) {
+            $ponPortsMap = $olt->ponPorts()->with('onts.customer')->get()->keyBy(function ($pp) {
                 return "{$pp->slot}/{$pp->port}";
             });
 
             foreach ($discoveredOnus as $onu) {
                 $key = "{$onu['slot']}/{$onu['port']}";
-                $ponPort = $ponPorts->get($key);
+                $ponPort = $ponPortsMap->get($key);
+                if (!$ponPort) continue;
 
-                if ($ponPort) {
-                    // Find ONTs without ONT ID in this port, assign sequentially
-                    $ontsWithoutId = $ponPort->onts->whereNull('ont_id_number')->values();
+                $onuId = $onu['onu_id'];
+                $status = ($onu['status'] ?? 'up') === 'up' ? 'online' : 'offline';
 
-                    // Check if this ONU ID is already assigned
-                    $alreadyAssigned = $ponPort->onts->where('ont_id_number', $onu['onu_id'])->first();
-                    if ($alreadyAssigned) {
-                        // Update status
-                        $alreadyAssigned->update(['status' => $onu['status']]);
-                        continue;
+                // Check if already assigned by ONT ID
+                $existingOnt = $ponPort->onts->where('ont_id_number', $onuId)->first();
+
+                if ($existingOnt) {
+                    // Update existing ONT with latest data
+                    $updateData = ['status' => $status, 'last_online_at' => now()];
+                    if (isset($onu['rx_power'])) $updateData['rx_power'] = $onu['rx_power'];
+                    if (isset($onu['tx_power'])) $updateData['tx_power'] = $onu['tx_power'];
+                    if (isset($onu['mac']) && empty($existingOnt->serial_number)) {
+                        $updateData['serial_number'] = $onu['mac'];
                     }
+                    $existingOnt->update($updateData);
+                    $updated++;
+                    continue;
+                }
 
-                    // Assign to first ONT without ID
-                    if ($ontsWithoutId->isNotEmpty()) {
-                        $ont = $ontsWithoutId->shift();
-                        $ont->update([
-                            'ont_id_number' => $onu['onu_id'],
-                            'status' => $onu['status'],
-                        ]);
-                        $updated++;
+                // Try to match by name (customer name)
+                $matchedByName = null;
+                if (!empty($onu['name'])) {
+                    $matchedByName = $ponPort->onts
+                        ->whereNull('ont_id_number')
+                        ->first(function ($ont) use ($onu) {
+                            $customerName = $ont->customer?->name ?? $ont->name;
+                            return $customerName && stripos($customerName, $onu['name']) !== false;
+                        });
+                }
+
+                // Or assign to first ONT without ID
+                $targetOnt = $matchedByName ?? $ponPort->onts->whereNull('ont_id_number')->first();
+
+                if ($targetOnt) {
+                    $updateData = [
+                        'ont_id_number' => $onuId,
+                        'status' => $status,
+                        'last_online_at' => now(),
+                    ];
+                    if (isset($onu['rx_power'])) $updateData['rx_power'] = $onu['rx_power'];
+                    if (isset($onu['tx_power'])) $updateData['tx_power'] = $onu['tx_power'];
+                    if (isset($onu['mac']) && empty($targetOnt->serial_number)) {
+                        $updateData['serial_number'] = $onu['mac'];
                     }
+                    $targetOnt->update($updateData);
+
+                    // Remove from collection so it won't be matched again
+                    $ponPort->setRelation('onts', $ponPort->onts->reject(fn($o) => $o->id === $targetOnt->id));
+                    $updated++;
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "Ditemukan " . count($discoveredOnus) . " ONU. {$updated} ONT berhasil di-update ID-nya.",
+                'message' => "Ditemukan " . count($discoveredOnus) . " ONU via {$method}. {$updated} ONT berhasil di-update.",
                 'discovered' => $discoveredOnus,
                 'updated' => $updated,
+                'method' => $method,
             ]);
         } finally {
             $driver->disconnect();
@@ -341,7 +388,11 @@ class OltController extends Controller
 
         $updated = 0;
         $errors = [];
-        $method = ($driver instanceof HisoOltDriver && $driver->hasSnmp()) ? 'SNMP' : 'Telnet';
+        if ($driver instanceof HisoOltDriver) {
+            $method = $driver->isWebConnected() ? 'Web' : ($driver->hasSnmp() ? 'SNMP' : 'Telnet');
+        } else {
+            $method = 'Telnet';
+        }
 
         try {
             $ponPorts = $olt->ponPorts()->where('is_active', true)->with('onts')->get();
@@ -434,7 +485,11 @@ class OltController extends Controller
                 ], 400);
             }
 
-            $method = ($driver instanceof HisoOltDriver && $driver->hasSnmp()) ? 'SNMP' : 'Telnet';
+            if ($driver instanceof HisoOltDriver) {
+                $method = $driver->isWebConnected() ? 'Web' : ($driver->hasSnmp() ? 'SNMP' : 'Telnet');
+            } else {
+                $method = 'Telnet';
+            }
             $power = $driver->getOpticalPower($ponPort->slot, $ponPort->port, $ont->ont_id_number);
 
             if (empty($power)) {
