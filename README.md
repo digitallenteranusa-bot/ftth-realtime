@@ -40,6 +40,10 @@ Sistem monitoring dan manajemen FTTH (Fiber To The Home) real-time dengan integr
 ### Monitoring & Alert
 - Polling otomatis Mikrotik (setiap 1 menit) dan OLT (setiap 3 menit)
 - Alarm otomatis saat ONT berubah status (offline/LOS)
+- **Alarm suara (beep)** di browser saat ONT terdeteksi LOS (kabel putus) dengan Web Audio API
+- **Banner alarm merah** persistent di atas halaman dengan daftar ONT LOS, auto-dismiss saat ONT kembali online
+- Tombol mute/unmute alarm suara di navbar (setting tersimpan di localStorage)
+- Dashboard: kartu ONT LOS terpisah dengan **animasi merah berkedip** saat ada LOS aktif
 - Notifikasi via Email dan Telegram Bot
 - Broadcast real-time via WebSocket (Laravel Reverb)
 - Toast notification di browser untuk alarm dan status ONT
@@ -678,6 +682,9 @@ Password : password
 - [ ] Export CSV/PDF berfungsi di halaman Customers dan ONT
 - [ ] Create dan manage Trouble Tickets berfungsi
 - [ ] Toast notification muncul saat ada flash message
+- [ ] Alarm suara berbunyi saat ada ONT LOS (pastikan browser tidak di-mute)
+- [ ] Banner merah LOS muncul di atas halaman dan bisa di-dismiss
+- [ ] Tombol mute/unmute alarm berfungsi di navbar
 
 ---
 
