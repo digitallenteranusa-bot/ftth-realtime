@@ -2,13 +2,24 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import TrafficChart from '@/Components/TrafficChart.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { useAlarmSound } from '@/Composables/useAlarmSound';
 
 const props = defineProps({
     stats: Object,
     recentAlarms: Array,
     recentTickets: Array,
     mikrotiks: Array,
+});
+
+const { playAlarm } = useAlarmSound();
+const prevLosCount = ref(props.stats?.onts_los || 0);
+
+watch(() => props.stats?.onts_los, (newCount) => {
+    if (newCount > prevLosCount.value) {
+        playAlarm();
+    }
+    prevLosCount.value = newCount;
 });
 
 let refreshInterval = null;
@@ -51,8 +62,12 @@ onUnmounted(() => { if (refreshInterval) clearInterval(refreshInterval); });
                         <div class="mt-1 text-2xl font-bold text-green-600">{{ stats.onts_online }}</div>
                     </div>
                     <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
-                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">ONT Offline/LOS</div>
-                        <div class="mt-1 text-2xl font-bold text-red-600">{{ stats.onts_offline + stats.onts_los }}</div>
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">ONT Offline</div>
+                        <div class="mt-1 text-2xl font-bold text-orange-600">{{ stats.onts_offline }}</div>
+                    </div>
+                    <div class="rounded-lg p-4 shadow" :class="stats.onts_los > 0 ? 'bg-red-600 animate-pulse' : 'bg-white dark:bg-gray-800'">
+                        <div class="text-sm font-medium" :class="stats.onts_los > 0 ? 'text-red-100' : 'text-gray-500 dark:text-gray-400'">ONT LOS</div>
+                        <div class="mt-1 text-2xl font-bold" :class="stats.onts_los > 0 ? 'text-white' : 'text-red-600'">{{ stats.onts_los }}</div>
                     </div>
                     <div class="rounded-lg bg-white dark:bg-gray-800 p-4 shadow">
                         <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Active PPPoE</div>
