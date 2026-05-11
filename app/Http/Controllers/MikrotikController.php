@@ -94,6 +94,40 @@ class MikrotikController extends Controller
         return response()->json($service->getSystemResources($mikrotik));
     }
 
+    public function traffic(Mikrotik $mikrotik, MikrotikApiService $service)
+    {
+        $resources = $service->getSystemResources($mikrotik);
+        if (empty($resources)) {
+            return response()->json(['connected' => false]);
+        }
+
+        $interfaces = $service->getInterfaces($mikrotik);
+        $trafficData = [];
+        foreach ($interfaces as $iface) {
+            $name = $iface['name'] ?? '';
+            if (in_array($iface['type'] ?? '', ['ether', 'bridge', 'vlan', 'pppoe-in']) && ($iface['running'] ?? '') === 'true') {
+                $traffic = $service->getInterfaceTraffic($mikrotik, $name);
+                if (!empty($traffic[0])) {
+                    $trafficData[] = [
+                        'interface' => $name,
+                        'rx' => (int) ($traffic[0]['rx-bits-per-second'] ?? 0),
+                        'tx' => (int) ($traffic[0]['tx-bits-per-second'] ?? 0),
+                    ];
+                }
+            }
+        }
+
+        $totalRx = array_sum(array_column($trafficData, 'rx'));
+        $totalTx = array_sum(array_column($trafficData, 'tx'));
+
+        return response()->json([
+            'connected' => true,
+            'rx' => $totalRx,
+            'tx' => $totalTx,
+            'interfaces' => $trafficData,
+        ]);
+    }
+
     public function pppoeDisconnect(Mikrotik $mikrotik, Request $request, MikrotikApiService $service)
     {
         $request->validate(['id' => 'required|string']);

@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/mikrotiks/{mikrotik}', [MikrotikController::class, 'update'])->name('mikrotiks.update')->middleware('role:admin,operator');
     Route::delete('/mikrotiks/{mikrotik}', [MikrotikController::class, 'destroy'])->name('mikrotiks.destroy')->middleware('role:admin');
     Route::get('/mikrotiks/{mikrotik}/resources', [MikrotikController::class, 'resources'])->name('mikrotiks.resources');
+    Route::get('/mikrotiks/{mikrotik}/traffic', [MikrotikController::class, 'traffic'])->name('mikrotiks.traffic');
     Route::post('/mikrotiks/{mikrotik}/pppoe-disconnect', [MikrotikController::class, 'pppoeDisconnect'])->name('mikrotiks.pppoe-disconnect')->middleware('role:admin,operator');
 
     // OLT - operator kelola, teknisi lihat
