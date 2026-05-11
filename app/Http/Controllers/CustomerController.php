@@ -73,7 +73,10 @@ class CustomerController extends Controller
         ]);
 
         // Create ONT linked to customer
-        if (!empty($validated['ont_name']) || !empty($validated['ont_serial_number'])) {
+        $hasOntData = !empty($validated['ont_name']) || !empty($validated['ont_serial_number'])
+            || !empty($validated['odp_id']) || !empty($validated['olt_id'])
+            || !empty($validated['pon_port_id']) || !empty($validated['ont_id_number']);
+        if ($hasOntData) {
             $ont = Ont::create([
                 'customer_id' => $customer->id,
                 'name' => $validated['ont_name'] ?? null,
@@ -174,6 +177,10 @@ class CustomerController extends Controller
             'lng' => $validated['lng'] ?? null,
         ];
 
+        $hasOntData = !empty($validated['ont_name']) || !empty($validated['ont_serial_number'])
+            || !empty($validated['odp_id']) || !empty($validated['olt_id'])
+            || !empty($validated['pon_port_id']) || !empty($validated['ont_id_number']);
+
         if ($ont) {
             // Validate unique serial number excluding current ONT
             if (!empty($validated['ont_serial_number'])) {
@@ -184,7 +191,7 @@ class CustomerController extends Controller
                 }
             }
             $ont->update($ontData);
-        } elseif (!empty($validated['ont_name']) || !empty($validated['ont_serial_number'])) {
+        } elseif ($hasOntData) {
             // Validate unique serial number for new ONT
             if (!empty($validated['ont_serial_number'])) {
                 $exists = Ont::where('serial_number', $validated['ont_serial_number'])->exists();
