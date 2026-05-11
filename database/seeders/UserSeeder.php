@@ -9,17 +9,13 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@ftth.local',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
-        User::create([
-            'name' => 'Operator 1',
-            'email' => 'operator@ftth.local',
-            'password' => Hash::make('password'),
-            'role' => 'operator',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@ftth.local'],
+            ['name' => 'Administrator', 'password' => Hash::make('password'), 'role' => 'admin']
+        );
+        User::firstOrCreate(
+            ['email' => 'operator@ftth.local'],
+            ['name' => 'Operator 1', 'password' => Hash::make('password'), 'role' => 'operator']
+        );
     }
 }
