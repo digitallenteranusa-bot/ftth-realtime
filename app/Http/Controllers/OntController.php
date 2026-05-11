@@ -38,7 +38,8 @@ class OntController extends Controller
     {
         return Inertia::render('Ont/Create', [
             'odps' => Odp::where('is_active', true)->get(['id', 'name']),
-            'customers' => Customer::where('status', 'active')->get(['id', 'name']),
+            'customers' => Customer::with(['onts' => fn($q) => $q->select('id', 'customer_id', 'odp_id', 'olt_id', 'pon_port_id', 'name', 'serial_number', 'ont_id_number', 'lat', 'lng')])
+                ->where('status', 'active')->get(['id', 'name', 'lat', 'lng']),
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
             'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
         ]);
@@ -97,7 +98,8 @@ class OntController extends Controller
         return Inertia::render('Ont/Edit', [
             'ont' => $ont,
             'odps' => Odp::where('is_active', true)->get(['id', 'name']),
-            'customers' => Customer::where('status', 'active')->get(['id', 'name']),
+            'customers' => Customer::with(['onts' => fn($q) => $q->select('id', 'customer_id', 'odp_id', 'olt_id', 'pon_port_id', 'name', 'serial_number', 'ont_id_number', 'lat', 'lng')])
+                ->where('status', 'active')->get(['id', 'name', 'lat', 'lng']),
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
             'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
         ]);
