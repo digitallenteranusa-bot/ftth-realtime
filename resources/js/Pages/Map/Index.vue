@@ -21,6 +21,7 @@ const deviceIcons = {
     olt: { color: '#8b5cf6', symbol: 'O', size: 18 },
     odc: { color: '#6366f1', symbol: 'DC', size: 16 },
     odp: { color: '#0ea5e9', symbol: 'DP', size: 14 },
+    customer: { color: '#eab308', symbol: 'C', size: 14 },
 };
 
 // Drawing state
@@ -110,7 +111,7 @@ function buildLayers() {
     layers.ont = L.layerGroup();
     elements.onts.forEach(d => {
         const customerName = d.customer ? d.customer.name : '-';
-        L.marker([d.lat, d.lng], { icon: createIcon(null, d.status) })
+        L.marker([d.lat, d.lng], { icon: createIcon('customer') })
             .bindPopup(`<b>${customerName}</b><br>ONT: ${d.name || d.serial_number}<br>Status: <span style="color:${statusColors[d.status]}">${d.status}</span><br>Rx Power: ${d.rx_power ?? '-'} dBm`)
             .addTo(layers.ont);
     });
