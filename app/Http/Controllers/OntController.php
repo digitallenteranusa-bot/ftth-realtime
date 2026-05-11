@@ -63,26 +63,6 @@ class OntController extends Controller
 
         $ont = Ont::create($validated);
 
-        // Auto-create fiber route ODP → ONT
-        if ($ont->odp_id && $ont->lat && $ont->lng) {
-            $odp = Odp::find($ont->odp_id);
-            if ($odp) {
-                FiberRoute::create([
-                    'name' => "Drop {$odp->name} - " . ($ont->name ?: $ont->serial_number),
-                    'source_type' => 'odp',
-                    'source_id' => $odp->id,
-                    'destination_type' => 'ont',
-                    'destination_id' => $ont->id,
-                    'coordinates' => [
-                        [$odp->lat, $odp->lng],
-                        [$ont->lat, $ont->lng],
-                    ],
-                    'color' => '#ff9933',
-                    'status' => 'active',
-                ]);
-            }
-        }
-
         return redirect()->route('onts.index')->with('success', 'ONT berhasil ditambahkan.');
     }
 
