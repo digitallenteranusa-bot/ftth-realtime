@@ -21,10 +21,43 @@ const emit = defineEmits(['update:lat', 'update:lng']);
 
 const mapEl = ref(null);
 const expanded = ref(false);
+const searchQuery = ref('');
+const searchResults = ref([]);
+const searching = ref(false);
 let map = null;
 let marker = null;
+let searchTimeout = null;
 
 const defaultCenter = [-8.1228, 111.5617];
+
+function searchLocation() {
+    clearTimeout(searchTimeout);
+    const q = searchQuery.value.trim();
+    if (q.length < 3) { searchResults.value = []; return; }
+    searching.value = true;
+    searchTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=id`);
+            searchResults.value = await res.json();
+        } catch { searchResults.value = []; }
+        searching.value = false;
+    }, 400);
+}
+
+function selectResult(result) {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    if (marker) {
+        marker.setLatLng([lat, lng]);
+    } else {
+        createMarker([lat, lng]);
+    }
+    map.setView([lat, lng], 17);
+    emit('update:lat', parseFloat(lat.toFixed(7)));
+    emit('update:lng', parseFloat(lng.toFixed(7)));
+    searchResults.value = [];
+    searchQuery.value = result.display_name.split(',').slice(0, 3).join(',');
+}
 
 function initMap() {
     if (map) {
@@ -115,6 +148,7 @@ watch(() => [props.lat, props.lng], ([newLat, newLng]) => {
 });
 
 onUnmounted(() => {
+    clearTimeout(searchTimeout);
     if (map) { map.remove(); map = null; }
     marker = null;
 });
@@ -134,7 +168,25 @@ onUnmounted(() => {
             </svg>
         </button>
         <div v-show="expanded" class="rounded-lg border border-gray-300 overflow-hidden shadow-sm">
-            <div ref="mapEl" style="height: 350px; width: 100%;"></div>
+            <div class="relative">
+                <div class="absolute top-2 left-2 right-12 z-[1000]">
+                    <div class="relative">
+                        <input v-model="searchQuery" @input="searchLocation" @keydown.enter.prevent
+                            type="text" placeholder="Cari lokasi..."
+                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-8 text-sm shadow-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        <svg v-if="searching" class="absolute right-2 top-2.5 h-4 w-4 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <svg v-else class="absolute right-2 top-2.5 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <div v-if="searchResults.length" class="mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                        <button v-for="(r, i) in searchResults" :key="i" @click="selectResult(r)" type="button"
+                            class="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50 border-b border-gray-100 last:border-0">
+                            <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <span class="text-gray-700">{{ r.display_name }}</span>
+                        </button>
+                    </div>
+                </div>
+                <div ref="mapEl" style="height: 350px; width: 100%;"></div>
+            </div>
             <div class="flex items-center justify-between bg-gray-50 px-3 py-2 text-xs text-gray-500">
                 <span>Klik pada peta untuk memilih lokasi. Drag marker untuk memindahkan.</span>
                 <span v-if="lat && lng" class="font-mono text-gray-700">{{ parseFloat(lat).toFixed(7) }}, {{ parseFloat(lng).toFixed(7) }}</span>
