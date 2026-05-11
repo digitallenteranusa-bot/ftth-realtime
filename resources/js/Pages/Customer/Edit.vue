@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-const props = defineProps({ customer: Object, odps: Array, olts: Array, ponPorts: Array });
+const props = defineProps({ customer: Object, odps: Array, olts: Array, ponPorts: Array, bandwidthPlans: Array });
 const ont = props.customer.onts?.[0] || {};
 const form = useForm({
     name: props.customer.name, address: props.customer.address, phone: props.customer.phone,
@@ -32,15 +32,7 @@ function submit() { form.put(route('customers.update', props.customer.id)); }
                         <div><label class="block text-sm font-medium text-gray-700">Bandwidth</label>
                             <select v-model="form.bandwidth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                                 <option value="">-- Pilih Bandwidth --</option>
-                                <option value="5 Mbps">5 Mbps</option>
-                                <option value="10 Mbps">10 Mbps</option>
-                                <option value="20 Mbps">20 Mbps</option>
-                                <option value="30 Mbps">30 Mbps</option>
-                                <option value="50 Mbps">50 Mbps</option>
-                                <option value="100 Mbps">100 Mbps</option>
-                                <option value="200 Mbps">200 Mbps</option>
-                                <option value="500 Mbps">500 Mbps</option>
-                                <option value="1 Gbps">1 Gbps</option>
+                                <option v-for="bp in bandwidthPlans" :key="bp.id" :value="bp.name">{{ bp.name }}</option>
                             </select>
                         </div>
                         <div><label class="block text-sm font-medium text-gray-700">Status</label><select v-model="form.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></div>

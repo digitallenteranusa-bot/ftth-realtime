@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-defineProps({ odps: Array, olts: Array, ponPorts: Array });
+defineProps({ odps: Array, olts: Array, ponPorts: Array, bandwidthPlans: Array });
 const form = useForm({
     name: '', address: '', phone: '', bandwidth: '', lat: '', lng: '', status: 'active', notes: '',
     // ONT fields
@@ -27,15 +27,7 @@ function submit() { form.post(route('customers.store')); }
                         <div><label class="block text-sm font-medium text-gray-700">Bandwidth</label>
                             <select v-model="form.bandwidth" :class="{ 'border-red-500': form.errors.bandwidth }" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                                 <option value="">-- Pilih Bandwidth --</option>
-                                <option value="5 Mbps">5 Mbps</option>
-                                <option value="10 Mbps">10 Mbps</option>
-                                <option value="20 Mbps">20 Mbps</option>
-                                <option value="30 Mbps">30 Mbps</option>
-                                <option value="50 Mbps">50 Mbps</option>
-                                <option value="100 Mbps">100 Mbps</option>
-                                <option value="200 Mbps">200 Mbps</option>
-                                <option value="500 Mbps">500 Mbps</option>
-                                <option value="1 Gbps">1 Gbps</option>
+                                <option v-for="bp in bandwidthPlans" :key="bp.id" :value="bp.name">{{ bp.name }}</option>
                             </select>
                             <div v-if="form.errors.bandwidth" class="text-sm text-red-600 mt-1">{{ form.errors.bandwidth }}</div>
                         </div>

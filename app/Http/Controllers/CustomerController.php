@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\BandwidthPlan;
 use App\Models\Customer;
 use App\Models\FiberRoute;
 use App\Models\Odp;
@@ -36,6 +37,7 @@ class CustomerController extends Controller
             'odps' => Odp::where('is_active', true)->get(['id', 'name']),
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
             'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
+            'bandwidthPlans' => BandwidthPlan::where('is_active', true)->get(['id', 'name']),
         ]);
     }
 
@@ -123,6 +125,7 @@ class CustomerController extends Controller
             'odps' => Odp::where('is_active', true)->get(['id', 'name']),
             'olts' => Olt::where('is_active', true)->get(['id', 'name']),
             'ponPorts' => PonPort::with('olt:id,name')->where('is_active', true)->get(['id', 'olt_id', 'slot', 'port']),
+            'bandwidthPlans' => BandwidthPlan::where('is_active', true)->get(['id', 'name']),
         ]);
     }
 
