@@ -105,7 +105,8 @@ class MikrotikController extends Controller
         $trafficData = [];
         foreach ($interfaces as $iface) {
             $name = $iface['name'] ?? '';
-            if (in_array($iface['type'] ?? '', ['ether', 'bridge', 'vlan', 'pppoe-in']) && ($iface['running'] ?? '') === 'true') {
+            $type = $iface['type'] ?? '';
+            if (in_array($type, ['ether', 'bridge', 'vlan']) && ($iface['running'] ?? '') === 'true') {
                 $traffic = $service->getInterfaceTraffic($mikrotik, $name);
                 if (!empty($traffic[0])) {
                     $trafficData[] = [
@@ -117,13 +118,21 @@ class MikrotikController extends Controller
             }
         }
 
-        $totalRx = array_sum(array_column($trafficData, 'rx'));
-        $totalTx = array_sum(array_column($trafficData, 'tx'));
+        $top = null;
+        $maxTotal = 0;
+        foreach ($trafficData as $td) {
+            $total = $td['rx'] + $td['tx'];
+            if ($total > $maxTotal) {
+                $maxTotal = $total;
+                $top = $td;
+            }
+        }
 
         return response()->json([
             'connected' => true,
-            'rx' => $totalRx,
-            'tx' => $totalTx,
+            'rx' => $top['rx'] ?? 0,
+            'tx' => $top['tx'] ?? 0,
+            'interface' => $top['interface'] ?? null,
             'interfaces' => $trafficData,
         ]);
     }

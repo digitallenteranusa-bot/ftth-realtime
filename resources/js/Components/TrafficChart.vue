@@ -18,6 +18,7 @@ const labels = ref([]);
 const rxData = ref([]);
 const txData = ref([]);
 const connected = ref(null);
+const activeInterface = ref(null);
 let interval = null;
 
 const chartData = ref({
@@ -100,6 +101,7 @@ async function fetchTraffic() {
         }
 
         connected.value = true;
+        activeInterface.value = data.interface || null;
         const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         labels.value.push(now);
         rxData.value.push(data.rx || 0);
@@ -124,15 +126,11 @@ onMounted(() => {
         window.Echo.channel(`traffic.${props.mikrotikId}`)
             .listen('TrafficUpdated', (e) => {
                 connected.value = true;
+                activeInterface.value = e.interface || null;
                 const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                let totalRx = 0, totalTx = 0;
-                (e.data || []).forEach(d => {
-                    totalRx += parseInt(d.rx_bytes || 0);
-                    totalTx += parseInt(d.tx_bytes || 0);
-                });
                 labels.value.push(now);
-                rxData.value.push(totalRx);
-                txData.value.push(totalTx);
+                rxData.value.push(e.rx || 0);
+                txData.value.push(e.tx || 0);
                 if (labels.value.length > MAX_POINTS) {
                     labels.value.shift();
                     rxData.value.shift();
@@ -152,7 +150,10 @@ onUnmounted(() => {
 <template>
     <div>
         <div class="mb-2 flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-gray-700">{{ mikrotikName || 'Traffic' }} - Live Traffic</h4>
+            <h4 class="text-sm font-semibold text-gray-700">
+                {{ mikrotikName || 'Traffic' }} - Live Traffic
+                <span v-if="activeInterface" class="ml-1 text-xs font-normal text-gray-500">({{ activeInterface }})</span>
+            </h4>
             <span v-if="connected === true" class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                 <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span> Connected
             </span>
