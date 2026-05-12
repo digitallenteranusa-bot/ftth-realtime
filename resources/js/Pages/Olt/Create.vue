@@ -3,11 +3,23 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocationPicker from '@/Components/LocationPicker.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 
+import { ref, watch } from 'vue';
+
+const vendorSelect = ref('');
+const customVendor = ref('');
+
 const form = useForm({
     name: '', vendor: '', host: '', telnet_port: 23, ssh_port: 22,
     username: '', password: '', snmp_community: 'public', snmp_port: 161,
     is_active: true, location: '', lat: '', lng: '', notes: '',
     pon_count: 8,
+});
+
+watch(vendorSelect, (val) => {
+    form.vendor = val === 'other' ? customVendor.value : val;
+});
+watch(customVendor, (val) => {
+    if (vendorSelect.value === 'other') form.vendor = val;
 });
 
 function submit() { form.post(route('olts.store')); }
@@ -28,7 +40,7 @@ function submit() { form.post(route('olts.store')); }
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Vendor *</label>
-                            <select v-model="form.vendor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                            <select v-model="vendorSelect" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
                                 <option value="">-- Pilih Vendor --</option>
                                 <optgroup label="GPON">
                                     <option value="zte">ZTE</option>
@@ -43,6 +55,9 @@ function submit() { form.post(route('olts.store')); }
                                     <option value="calix">Calix</option>
                                     <option value="ubiquiti">Ubiquiti (UFiber)</option>
                                     <option value="mikrotik">MikroTik</option>
+                                    <option value="hsgq">HSGQ</option>
+                                    <option value="hs-airpo">HS-AIRPO</option>
+                                    <option value="jolink">JOLINK</option>
                                 </optgroup>
                                 <optgroup label="EPON">
                                     <option value="bdcom-epon">BDCOM (EPON)</option>
@@ -57,6 +72,8 @@ function submit() { form.post(route('olts.store')); }
                                     <option value="other">Lainnya</option>
                                 </optgroup>
                             </select>
+                            <input v-if="vendorSelect === 'other'" v-model="customVendor" type="text" placeholder="Masukkan merek OLT..." class="mt-2 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                            <p v-if="form.errors.vendor" class="mt-1 text-sm text-red-600">{{ form.errors.vendor }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Jumlah PON Port *</label>
