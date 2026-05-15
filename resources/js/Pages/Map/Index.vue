@@ -29,6 +29,8 @@ const isDrawing = ref(false);
 const drawingPoints = ref([]);
 const drawingMode = ref(null); // 'new' or 'edit'
 const editingRouteId = ref(null);
+const followRoad = ref(true);
+const isRouting = ref(false);
 let drawingPolyline = null;
 let drawingMarkers = [];
 
@@ -186,9 +188,37 @@ function startEditRoute(routeId) {
     updateDrawingLine();
 }
 
-function onMapClick(e) {
+async function getOSRMRoute(from, to) {
+    try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes?.[0]?.geometry?.coordinates) {
+            return data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+        }
+    } catch {}
+    return null;
+}
+
+async function onMapClick(e) {
     if (!isDrawing.value) return;
-    drawingPoints.value.push([e.latlng.lat, e.latlng.lng]);
+    const newPoint = [e.latlng.lat, e.latlng.lng];
+
+    if (followRoad.value && drawingPoints.value.length > 0) {
+        const lastPoint = drawingPoints.value[drawingPoints.value.length - 1];
+        isRouting.value = true;
+        const roadPath = await getOSRMRoute(lastPoint, newPoint);
+        isRouting.value = false;
+
+        if (roadPath && roadPath.length > 2) {
+            roadPath.shift();
+            drawingPoints.value.push(...roadPath);
+        } else {
+            drawingPoints.value.push(newPoint);
+        }
+    } else {
+        drawingPoints.value.push(newPoint);
+    }
     updateDrawingLine();
 }
 
@@ -469,9 +499,19 @@ onUnmounted(() => {
                     <div v-if="drawingDistance" class="text-sm font-medium text-gray-700">
                         Jarak: {{ drawingDistance }} ({{ drawingPoints.length }} titik)
                     </div>
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs text-gray-600">Warna:</label>
-                        <input type="color" v-model="routeForm.color" @input="updateDrawingLine" class="w-8 h-6 border rounded cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <input type="checkbox" v-model="followRoad" class="rounded border-gray-300 text-blue-600">
+                            <span class="text-gray-600">Ikuti Jalan</span>
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-600">
+                            Warna:
+                            <input type="color" v-model="routeForm.color" @input="updateDrawingLine" class="w-8 h-6 border rounded cursor-pointer">
+                        </label>
+                    </div>
+                    <div v-if="isRouting" class="flex items-center gap-2 text-xs text-blue-600">
+                        <svg class="h-3 w-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        Mencari jalur jalan...
                     </div>
                     <div class="flex gap-2">
                         <button @click="undoLastPoint" :disabled="drawingPoints.length === 0"
