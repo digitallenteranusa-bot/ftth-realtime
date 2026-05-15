@@ -55,6 +55,7 @@ function can(permission) {
                                 <NavLink v-if="can('user.manage')" :href="route('users.index')" :active="route().current('users.*')">Users</NavLink>
                                 <NavLink v-if="can('user.manage')" :href="route('role-permissions.index')" :active="route().current('role-permissions.*')">Roles</NavLink>
                                 <NavLink v-if="can('audit_log.view')" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</NavLink>
+                                <NavLink v-if="$page.props.auth?.user?.role === 'admin'" :href="route('backups.index')" :active="route().current('backups.*')">Backup</NavLink>
                             </div>
                         </div>
 
@@ -150,6 +151,7 @@ function can(permission) {
                         <ResponsiveNavLink v-if="can('user.manage')" :href="route('users.index')" :active="route().current('users.*')">Users</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="can('user.manage')" :href="route('role-permissions.index')" :active="route().current('role-permissions.*')">Roles</ResponsiveNavLink>
                         <ResponsiveNavLink v-if="can('audit_log.view')" :href="route('audit-logs.index')" :active="route().current('audit-logs.*')">Audit Log</ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.user?.role === 'admin'" :href="route('backups.index')" :active="route().current('backups.*')">Backup</ResponsiveNavLink>
                     </div>
 
                     <!-- Responsive Settings Options -->

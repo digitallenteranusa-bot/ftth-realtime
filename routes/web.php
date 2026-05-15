@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BandwidthPlanController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
@@ -140,6 +141,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Audit Logs (admin only)
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index')->middleware('role:admin');
+
+    // Backup & Restore (admin only)
+    Route::get('/backups', [BackupController::class, 'index'])->name('backups.index')->middleware('role:admin');
+    Route::post('/backups/create', [BackupController::class, 'create'])->name('backups.create')->middleware('role:admin');
+    Route::get('/backups/{filename}/download', [BackupController::class, 'download'])->name('backups.download')->middleware('role:admin');
+    Route::post('/backups/upload', [BackupController::class, 'upload'])->name('backups.upload')->middleware('role:admin');
+    Route::post('/backups/{filename}/restore', [BackupController::class, 'restore'])->name('backups.restore')->middleware('role:admin');
+    Route::delete('/backups/{filename}', [BackupController::class, 'destroy'])->name('backups.destroy')->middleware('role:admin');
 
     // Role Permissions (admin only)
     Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index')->middleware('role:admin');
