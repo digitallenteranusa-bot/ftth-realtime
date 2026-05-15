@@ -39,8 +39,8 @@ class OltController extends Controller
             'snmp_port' => 'nullable|integer',
             'is_active' => 'boolean',
             'location' => 'nullable|string|max:255',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
             'pon_count' => 'nullable|integer|in:1,2,4,8,16',
         ]);
@@ -92,8 +92,8 @@ class OltController extends Controller
             'snmp_port' => 'nullable|integer',
             'is_active' => 'boolean',
             'location' => 'nullable|string|max:255',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
             'pon_count' => 'nullable|integer|in:1,2,4,8,16',
         ]);

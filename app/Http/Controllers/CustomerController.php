@@ -48,8 +48,8 @@ class CustomerController extends Controller
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
             'bandwidth' => 'nullable|string|max:20',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'status' => 'nullable|in:active,inactive,suspended',
             'notes' => 'nullable|string',
             // ONT fields
@@ -119,8 +119,8 @@ class CustomerController extends Controller
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
             'bandwidth' => 'nullable|string|max:20',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'status' => 'nullable|in:active,inactive,suspended',
             'notes' => 'nullable|string',
             // ONT fields

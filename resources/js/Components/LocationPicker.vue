@@ -28,7 +28,7 @@ let map = null;
 let marker = null;
 let searchTimeout = null;
 
-const defaultCenter = [-8.1228, 111.5617];
+const defaultCenter = [-8.051736, 111.664395];
 
 function searchLocation() {
     clearTimeout(searchTimeout);

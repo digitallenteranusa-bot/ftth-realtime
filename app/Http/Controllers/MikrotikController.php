@@ -33,8 +33,8 @@ class MikrotikController extends Controller
             'snmp_port' => 'nullable|integer',
             'is_active' => 'boolean',
             'location' => 'nullable|string|max:255',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
         ]);
 
@@ -70,8 +70,8 @@ class MikrotikController extends Controller
             'snmp_port' => 'nullable|integer',
             'is_active' => 'boolean',
             'location' => 'nullable|string|max:255',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
         ]);
 

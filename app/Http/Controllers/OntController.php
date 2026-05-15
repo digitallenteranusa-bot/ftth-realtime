@@ -56,8 +56,8 @@ class OntController extends Controller
             'serial_number' => 'nullable|string|unique:onts',
             'ont_id_number' => 'nullable|integer',
             'status' => 'nullable|in:online,offline,los,dyinggasp,unknown',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
         ]);
 
@@ -96,8 +96,8 @@ class OntController extends Controller
             'serial_number' => 'nullable|string|unique:onts,serial_number,' . $ont->id,
             'ont_id_number' => 'nullable|integer',
             'status' => 'nullable|in:online,offline,los,dyinggasp,unknown',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
             'notes' => 'nullable|string',
         ]);
 

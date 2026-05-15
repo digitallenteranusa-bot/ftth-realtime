@@ -41,8 +41,8 @@ class OdpController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'odc_id' => 'required|exists:odcs,id',
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
             'address' => 'nullable|string|max:255',
             'capacity' => 'nullable|integer|min:0',
             'used_ports' => 'nullable|integer|min:0',
@@ -94,8 +94,8 @@ class OdpController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'odc_id' => 'required|exists:odcs,id',
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
             'address' => 'nullable|string|max:255',
             'capacity' => 'nullable|integer|min:0',
             'used_ports' => 'nullable|integer|min:0',
