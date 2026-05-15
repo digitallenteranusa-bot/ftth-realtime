@@ -31,6 +31,19 @@ Dokumentasi untuk deploy, update, dan troubleshoot server production.
 
 ---
 
+## ⚠️ Yang TIDAK BOLEH Dilakukan Sembarangan
+
+| Perintah | Risiko | Kapan Boleh |
+|----------|--------|-------------|
+| `php artisan key:generate` | Merusak semua password Mikrotik & OLT yang terenkripsi → 500 error | Hanya jika key bocor, **WAJIB** ikuti panduan lengkap di SECURITY-SETUP.md |
+| Edit `APP_KEY` di `.env` | Sama seperti di atas | Jangan pernah edit manual |
+| Push `.env` lokal ke server | Config berbeda, bisa merusak koneksi DB | Jangan pernah |
+
+> **Update code biasa (git pull, npm run build, migrate) selalu AMAN.**
+> Yang berbahaya hanya rotate APP_KEY tanpa re-encrypt data.
+
+---
+
 ## Update Rutin (Setelah Push Code)
 
 SSH ke server lalu jalankan:

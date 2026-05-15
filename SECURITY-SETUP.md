@@ -6,17 +6,30 @@ Panduan ini berisi langkah-langkah yang **harus dilakukan manual di server produ
 
 ## 1. Rotate APP_KEY (Enkripsi Laravel)
 
-APP_KEY digunakan untuk enkripsi session, cookie, dan data sensitif. Jika key lama pernah bocor, semua data terenkripsi bisa dibaca.
+> **⚠️ PERINGATAN:** APP_KEY digunakan untuk enkripsi password Mikrotik dan OLT di database.
+> Jika key diganti tanpa re-encrypt data, **semua halaman yang memuat data Mikrotik/OLT akan 500 error**.
+> Ikuti langkah di bawah **secara lengkap** — jangan skip langkah re-encrypt.
+
+APP_KEY digunakan untuk enkripsi session, cookie, dan data sensitif (termasuk password perangkat).
 
 ```bash
-# Backup .env dulu
+# 1. Backup .env dulu
 cp .env .env.backup-$(date +%Y%m%d)
 
-# Generate key baru (otomatis update .env)
+# 2. Generate key baru (otomatis update .env)
 php artisan key:generate
 
-# Bersihkan cache
+# 3. WAJIB — Re-encrypt semua password perangkat dengan key baru
+#    Ganti OLD_KEY dengan APP_KEY dari file backup
+php artisan app:reencrypt base64:KEY_LAMA_DARI_BACKUP
+
+# 4. Bersihkan cache
 php artisan optimize:clear
+```
+
+Cara dapat key lama:
+```bash
+grep APP_KEY .env.backup-*
 ```
 
 **Efek samping:** Semua session aktif akan logout. User tinggal login kembali.
