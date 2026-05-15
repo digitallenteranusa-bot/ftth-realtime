@@ -398,18 +398,18 @@ onMounted(() => {
     // Base layers
     const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri',
-        maxNativeZoom: 19, maxZoom: 25,
+        maxNativeZoom: 19, maxZoom: 30,
     });
     const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
-        maxNativeZoom: 19, maxZoom: 25,
+        maxNativeZoom: 19, maxZoom: 30,
     });
     const hybrid = L.layerGroup([
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 25 }),
-        L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 25, opacity: 0.7 }),
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 19, maxZoom: 30 }),
+        L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 30, opacity: 0.7 }),
     ]);
 
-    map = L.map(mapContainer.value, { layers: [satellite], maxZoom: 25 }).setView([-8.051736, 111.664395], 15);
+    map = L.map(mapContainer.value, { layers: [satellite], maxZoom: 30 }).setView([-8.051736, 111.664395], 15);
 
     L.control.layers({
         'Satelit': satellite,
