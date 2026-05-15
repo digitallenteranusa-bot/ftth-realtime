@@ -94,11 +94,25 @@ class MikrotikController extends Controller
         return response()->json($service->getSystemResources($mikrotik));
     }
 
-    public function traffic(Mikrotik $mikrotik, MikrotikApiService $service)
+    public function traffic(Mikrotik $mikrotik, Request $request, MikrotikApiService $service)
     {
         $resources = $service->getSystemResources($mikrotik);
         if (empty($resources)) {
             return response()->json(['connected' => false]);
+        }
+
+        $lockedInterface = $request->query('interface');
+
+        if ($lockedInterface) {
+            $traffic = $service->getInterfaceTraffic($mikrotik, $lockedInterface);
+            if (!empty($traffic[0])) {
+                return response()->json([
+                    'connected' => true,
+                    'rx' => (int) ($traffic[0]['rx-bits-per-second'] ?? 0),
+                    'tx' => (int) ($traffic[0]['tx-bits-per-second'] ?? 0),
+                    'interface' => $lockedInterface,
+                ]);
+            }
         }
 
         $interfaces = $service->getInterfaces($mikrotik);
@@ -133,7 +147,6 @@ class MikrotikController extends Controller
             'rx' => $top['rx'] ?? 0,
             'tx' => $top['tx'] ?? 0,
             'interface' => $top['interface'] ?? null,
-            'interfaces' => $trafficData,
         ]);
     }
 

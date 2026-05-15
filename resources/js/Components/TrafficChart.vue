@@ -8,6 +8,7 @@ const props = defineProps({
 
 const connected = ref(null);
 const activeInterface = ref(null);
+const lockedInterface = ref(null);
 const rxSpeed = ref(0);
 const txSpeed = ref(0);
 let interval = null;
@@ -22,7 +23,11 @@ function formatBits(bits) {
 
 async function fetchTraffic() {
     try {
-        const res = await fetch(`/mikrotiks/${props.mikrotikId}/traffic`, {
+        let url = `/mikrotiks/${props.mikrotikId}/traffic`;
+        if (lockedInterface.value) {
+            url += `?interface=${encodeURIComponent(lockedInterface.value)}`;
+        }
+        const res = await fetch(url, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         });
         if (!res.ok) { connected.value = false; return; }
@@ -34,6 +39,9 @@ async function fetchTraffic() {
         }
 
         connected.value = true;
+        if (!lockedInterface.value && data.interface) {
+            lockedInterface.value = data.interface;
+        }
         activeInterface.value = data.interface || null;
         rxSpeed.value = data.rx || 0;
         txSpeed.value = data.tx || 0;
