@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class ReEncryptMikrotikPasswords extends Command
 {
-    protected $signature = 'mikrotik:reencrypt {old_key : The old APP_KEY (base64:... format)}';
-    protected $description = 'Re-encrypt Mikrotik api_password from old APP_KEY to current APP_KEY';
+    protected $signature = 'app:reencrypt {old_key : The old APP_KEY (base64:... format)}';
+    protected $description = 'Re-encrypt all encrypted fields (Mikrotik api_password, OLT password) from old APP_KEY to current APP_KEY';
 
     public function handle(): int
     {
@@ -26,44 +26,55 @@ class ReEncryptMikrotikPasswords extends Command
         $oldEncrypter = new Encrypter($oldKeyBytes, config('app.cipher'));
         $newEncrypter = new Encrypter($newKeyBytes, config('app.cipher'));
 
-        $mikrotiks = DB::table('mikrotiks')->select('id', 'name', 'api_password')->get();
+        $totalSuccess = 0;
+        $totalFailed = 0;
 
-        if ($mikrotiks->isEmpty()) {
-            $this->info('Tidak ada data mikrotik.');
-            return 0;
-        }
+        $tables = [
+            ['table' => 'mikrotiks', 'field' => 'api_password', 'label' => 'Mikrotik'],
+            ['table' => 'olts', 'field' => 'password', 'label' => 'OLT'],
+        ];
 
-        $success = 0;
-        $failed = 0;
+        foreach ($tables as $entry) {
+            $this->newLine();
+            $this->info("=== {$entry['label']} ({$entry['table']}.{$entry['field']}) ===");
 
-        foreach ($mikrotiks as $row) {
-            if (empty($row->api_password)) {
+            $rows = DB::table($entry['table'])->select('id', 'name', $entry['field'])->get();
+
+            if ($rows->isEmpty()) {
+                $this->info('Tidak ada data.');
                 continue;
             }
 
-            try {
-                $plainPassword = $oldEncrypter->decryptString($row->api_password);
-                $newEncrypted = $newEncrypter->encryptString($plainPassword);
+            foreach ($rows as $row) {
+                $value = $row->{$entry['field']};
+                if (empty($value)) {
+                    continue;
+                }
 
-                DB::table('mikrotiks')
-                    ->where('id', $row->id)
-                    ->update(['api_password' => $newEncrypted]);
+                try {
+                    $plain = $oldEncrypter->decryptString($value);
+                    $reEncrypted = $newEncrypter->encryptString($plain);
 
-                $this->info("OK: {$row->name} (ID: {$row->id})");
-                $success++;
-            } catch (\Exception $e) {
-                $this->error("GAGAL: {$row->name} (ID: {$row->id}) — {$e->getMessage()}");
-                $failed++;
+                    DB::table($entry['table'])
+                        ->where('id', $row->id)
+                        ->update([$entry['field'] => $reEncrypted]);
+
+                    $this->info("  OK: {$row->name} (ID: {$row->id})");
+                    $totalSuccess++;
+                } catch (\Exception $e) {
+                    $this->error("  GAGAL: {$row->name} (ID: {$row->id}) — {$e->getMessage()}");
+                    $totalFailed++;
+                }
             }
         }
 
         $this->newLine();
-        $this->info("Selesai. Berhasil: {$success}, Gagal: {$failed}");
+        $this->info("Selesai. Berhasil: {$totalSuccess}, Gagal: {$totalFailed}");
 
-        if ($failed > 0) {
-            $this->warn('Ada yang gagal — kemungkinan old_key salah untuk beberapa record.');
+        if ($totalFailed > 0) {
+            $this->warn('Ada yang gagal — kemungkinan old_key salah.');
         }
 
-        return $failed > 0 ? 1 : 0;
+        return $totalFailed > 0 ? 1 : 0;
     }
 }
