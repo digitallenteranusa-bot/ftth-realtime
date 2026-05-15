@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { decodePaginationLabel as pl } from '@/Utils/pagination';
 
 const props = defineProps({
     logs: Object,
@@ -191,7 +192,7 @@ function formatDate(dateStr) {
                         :href="link.url || '#'"
                         class="mx-1 rounded px-3 py-1 text-sm"
                         :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
-                        v-html="link.label"
+                        v-text="pl(link.label)"
                     />
                 </div>
             </div>

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { decodePaginationLabel as pl } from '@/Utils/pagination';
 
 defineProps({ mikrotiks: Object });
 
@@ -76,7 +77,7 @@ function destroy(id) {
                 <div class="mt-4 flex justify-center" v-if="mikrotiks.links">
                     <Link v-for="link in mikrotiks.links" :key="link.label" :href="link.url || '#'"
                         class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'"
-                        v-html="link.label" :preserve-scroll="true" />
+                        v-text="pl(link.label)" :preserve-scroll="true" />
                 </div>
             </div>
         </div>

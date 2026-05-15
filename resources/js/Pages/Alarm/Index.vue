@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { decodePaginationLabel as pl } from '@/Utils/pagination';
 const props = defineProps({ alarms: Object, filters: Object });
 const severity = ref(props.filters?.severity || '');
 const unresolved = ref(props.filters?.unresolved || false);
@@ -52,7 +53,7 @@ watch([severity, unresolved], () => applyFilters());
                 </div>
             </div>
             <div class="mt-4 flex justify-center" v-if="alarms.links">
-                <a v-for="link in alarms.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />
+                <a v-for="link in alarms.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-text="pl(link.label)" />
             </div>
         </div></div>
     </AuthenticatedLayout>

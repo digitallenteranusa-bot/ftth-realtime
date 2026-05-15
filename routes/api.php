@@ -3,9 +3,9 @@
 use App\Http\Controllers\Api\ApiController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [ApiController::class, 'login']);
+Route::post('/login', [ApiController::class, 'login'])->middleware('throttle:5,1');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/dashboard', [ApiController::class, 'dashboard']);
     Route::get('/customers', [ApiController::class, 'customers']);
     Route::get('/customers/{id}', [ApiController::class, 'customerShow']);

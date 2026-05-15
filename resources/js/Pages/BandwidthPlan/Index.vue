@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { decodePaginationLabel as pl } from '@/Utils/pagination';
 
 const props = defineProps({ bandwidthPlans: Object });
 
@@ -86,8 +87,8 @@ function formatPrice(price) {
                 </div>
                 <div v-if="bandwidthPlans.links && bandwidthPlans.last_page > 1" class="mt-4 flex justify-center space-x-1">
                     <template v-for="link in bandwidthPlans.links" :key="link.label">
-                        <Link v-if="link.url" :href="link.url" class="rounded border px-3 py-1 text-sm" :class="link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'" v-html="link.label" />
-                        <span v-else class="rounded border px-3 py-1 text-sm text-gray-400" v-html="link.label" />
+                        <Link v-if="link.url" :href="link.url" class="rounded border px-3 py-1 text-sm" :class="link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'" v-text="pl(link.label)" />
+                        <span v-else class="rounded border px-3 py-1 text-sm text-gray-400" v-text="pl(link.label)" />
                     </template>
                 </div>
             </div>

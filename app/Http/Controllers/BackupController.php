@@ -63,15 +63,23 @@ class BackupController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'backup_file' => ['required', 'file', 'max:512000'],
+            'backup_file' => ['required', 'file', 'max:512000', 'mimes:sql,sqlite,db'],
         ]);
 
         $file = $request->file('backup_file');
-        $extension = $file->getClientOriginalExtension();
+        $extension = strtolower($file->getClientOriginalExtension());
 
         if (! in_array($extension, ['sql', 'sqlite', 'db'])) {
             return redirect()->route('backups.index')
                 ->with('error', 'Format file tidak didukung. Gunakan file .sql, .sqlite, atau .db');
+        }
+
+        if ($extension === 'sql') {
+            $head = file_get_contents($file->getRealPath(), false, null, 0, 1024);
+            if (preg_match('/<\s*(script|html|php|iframe)/i', $head)) {
+                return redirect()->route('backups.index')
+                    ->with('error', 'File mengandung konten yang tidak valid.');
+            }
         }
 
         $filename = 'upload_' . date('Y-m-d_H-i-s') . '.' . $extension;
@@ -90,6 +98,8 @@ class BackupController extends Controller
                 ->with('error', 'File backup tidak ditemukan.');
         }
 
+        Artisan::call('db:backup');
+
         $exitCode = Artisan::call('db:restore', [
             'file' => $path,
             '--force' => true,
@@ -97,7 +107,7 @@ class BackupController extends Controller
 
         if ($exitCode === 0) {
             return redirect()->route('backups.index')
-                ->with('success', "Database berhasil direstore dari '{$filename}'.");
+                ->with('success', "Database berhasil direstore dari '{$filename}'. Backup otomatis sebelum restore telah dibuat.");
         }
 
         return redirect()->route('backups.index')

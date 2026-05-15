@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { decodePaginationLabel as pl } from '@/Utils/pagination';
 const props = defineProps({ customers: Object, filters: Object });
 const search = ref(props.filters?.search || '');
 function applyFilters() { router.get(route('customers.index'), { search: search.value }, { preserveState: true, replace: true }); }
@@ -69,7 +70,7 @@ watch(search, () => applyFilters());
                 </table>
             </div>
             <div class="mt-4 flex justify-center" v-if="customers.links">
-                <Link v-for="link in customers.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-html="link.label" />
+                <Link v-for="link in customers.links" :key="link.label" :href="link.url || '#'" class="mx-1 rounded px-3 py-1 text-sm" :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" v-text="pl(link.label)" />
             </div>
         </div></div>
     </AuthenticatedLayout>

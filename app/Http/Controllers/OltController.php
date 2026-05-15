@@ -163,12 +163,12 @@ class OltController extends Controller
     public function registerOnt(Request $request, Olt $olt)
     {
         $validated = $request->validate([
-            'slot' => 'required|integer',
-            'port' => 'required|integer',
-            'ont_id' => 'required|integer',
-            'serial_number' => 'required|string|max:255',
-            'line_profile' => 'required|string|max:255',
-            'service_profile' => 'required|string|max:255',
+            'slot' => 'required|integer|min:0|max:63',
+            'port' => 'required|integer|min:0|max:255',
+            'ont_id' => 'required|integer|min:0|max:255',
+            'serial_number' => ['required', 'string', 'max:32', 'regex:/^[A-Za-z0-9\-]+$/'],
+            'line_profile' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9_\-]+$/'],
+            'service_profile' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'name' => 'nullable|string|max:255',
             'customer_id' => 'nullable|exists:customers,id',
             'odp_id' => 'nullable|exists:odps,id',

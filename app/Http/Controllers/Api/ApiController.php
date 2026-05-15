@@ -15,9 +15,15 @@ use App\Models\TroubleTicket;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class ApiController extends Controller
 {
+    protected function perPage(Request $request, int $default = 20, int $max = 100): int
+    {
+        return min(max((int) ($request->per_page ?? $default), 1), $max);
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -29,10 +35,13 @@ class ApiController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            Log::warning('API login failed', ['email' => $request->email, 'ip' => $request->ip()]);
             return response()->json(['message' => 'Email atau password salah.'], 401);
         }
 
         $token = $user->createToken($request->device_name ?? 'mobile-app')->plainTextToken;
+
+        Log::info('API login success', ['user_id' => $user->id, 'ip' => $request->ip()]);
 
         return response()->json([
             'token' => $token,
@@ -73,7 +82,7 @@ class ApiController extends Controller
             });
         }
 
-        return response()->json($query->latest()->paginate($request->per_page ?? 20));
+        return response()->json($query->latest()->paginate($this->perPage($request)));
     }
 
     public function customerShow($id)
@@ -98,7 +107,7 @@ class ApiController extends Controller
             });
         }
 
-        return response()->json($query->latest()->paginate($request->per_page ?? 20));
+        return response()->json($query->latest()->paginate($this->perPage($request)));
     }
 
     public function ontShow($id)
@@ -118,7 +127,7 @@ class ApiController extends Controller
             $query->where('is_resolved', false);
         }
 
-        return response()->json($query->latest()->paginate($request->per_page ?? 20));
+        return response()->json($query->latest()->paginate($this->perPage($request)));
     }
 
     public function tickets(Request $request)
@@ -129,6 +138,6 @@ class ApiController extends Controller
             $query->where('status', $request->status);
         }
 
-        return response()->json($query->latest()->paginate($request->per_page ?? 20));
+        return response()->json($query->latest()->paginate($this->perPage($request)));
     }
 }
