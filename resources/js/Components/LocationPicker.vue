@@ -71,13 +71,13 @@ function initMap() {
     const zoom = hasCoords ? 17 : 15;
 
     const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; Esri', maxZoom: 19,
+        attribution: '&copy; Esri', maxNativeZoom: 19, maxZoom: 25,
     });
     const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OSM', maxZoom: 19,
+        attribution: '&copy; OSM', maxNativeZoom: 19, maxZoom: 25,
     });
 
-    map = L.map(mapEl.value, { layers: [satellite] }).setView(center, zoom);
+    map = L.map(mapEl.value, { layers: [satellite], maxZoom: 25 }).setView(center, zoom);
     L.control.layers({ 'Satelit': satellite, 'Peta Jalan': streets }, null, { position: 'topright' }).addTo(map);
 
     if (hasCoords) {
